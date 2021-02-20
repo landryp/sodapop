@@ -1,0 +1,63 @@
+#!/usr/bin/env python
+
+'REWEIGHT-MASSES -- reweight posterior samples in (m1,m2) to account for a different prior'
+__usage__ = 'reweight-masses samples.csv [-p old_prior -r reweighted_prior -o /path/to/output.csv -v]'
+__author__ = 'Philippe Landry (pgjlandry@gmail.com)'
+__date__ = '01-2021'
+
+from argparse import ArgumentParser
+import numpy as np
+import os
+import sodapop.populations as pop
+
+parser = ArgumentParser(description=__doc__)
+parser.add_argument('data')
+parser.add_argument('-d', '--delim', help='delimiter for data file, DEFAULT=","', default=',')
+parser.add_argument('-c', '--cols', help='name of mass1, mass2 and distance data columns to use, DEFAULT="m1 m2 dL"', default=['m1','m2','dL'], nargs=3)
+parser.add_argument('-p', '--oldprior', help='name of original prior distribution, DEFAULT="flat_m1m2det"', default="flat_m1m2det", type=str)
+parser.add_argument('-r', '--newprior', help='name of desired prior distribution for reweighted samples, DEFAULT="flat_m1m2"', default="flat_m1m2", type=str)
+parser.add_argument('-o', '--outpath', help='path for output reweighted samples, DEFAULT=AUTO', default=False)
+parser.add_argument('-v', '--verbose', action='store_true', default=False)
+args = parser.parse_args()
+
+if args.outpath: out_path = args.outpath
+else: out_path = os.path.dirname(args.data)+'/'+os.path.basename(args.data).split('.')[-2]+'_reweighted.csv'
+
+# make dictionary of available priors
+
+prior_dict = {'flat_m1m2': pop.flat_m1m2, 'flat_m1m2det': pop.flat_m1m2det, 'flat_mceta': pop.flat_mceta, 'flat_mcetadet': pop.flat_mcetadet, 'doublegaussian_m1m2': pop.doublegaussian_m1m2, 'doublegaussian_m1_flat_m2': pop.doublegaussian_m1_flat_m2, 'doublegaussian_m1m2_qpair': pop.doublegaussian_m1m2_qpair, 'doublegaussian_m1_flat_m2_qpair': pop.doublegaussian_m1_flat_m2_qpair, 'o3a_powerpeak_m1m2_qpair': pop.o3a_powerpeak_m1m2_qpair, 'o3a_powerbreak_m1m2_qpair': pop.o3a_powerbreak_m1m2_qpair}
+
+old_prior = prior_dict[args.oldprior]
+new_prior = prior_dict[args.newprior]
+
+# load posterior samples
+
+post_data = np.genfromtxt(args.data,names=True,dtype=None,delimiter=args.delim)
+cols = post_data.dtype.names
+if args.verbose: print(cols) # check column names; use source-frame masses and dimensionless spins
+
+m1s = post_data[args.cols[0]] # COLUMN NAMES FOR INPUT
+m2s = post_data[args.cols[1]]
+dLs = post_data[args.cols[2]]
+
+post_samps = list(zip(m1s,m2s,dLs))
+num_samps = len(m1s)
+post_weights = np.ones(num_samps) # assume equally weighted posterior samples
+
+# calculate old prior weight for each posterior sample
+
+old_prior_weights = [old_prior(*samp) for samp in post_samps]
+
+# calculate new prior weight for each posterior sample
+
+new_prior_weights = [new_prior(*samp) for samp in post_samps]
+
+# reweight posterior via (new prior) * (likelihood), where likelihood = (posterior) / (old prior)
+
+new_post_weights = [post_weight*(new_prior_weight/old_prior_weight) for post_weight, old_prior_weight, new_prior_weight in zip(post_weights, old_prior_weights, new_prior_weights)]
+
+# save reweighted posterior
+
+new_post_samps = np.column_stack((np.array(m1s), np.array(m2s), np.array(dLs), np.array([1./wt for wt in old_prior_weights]), np.array(new_prior_weights), np.array(new_post_weights)))
+col_names = 'm1_source,m2_source,dL,likelihood,prior,posterior' # COLUMN NAMES FOR OUTPUT
+np.savetxt(out_path,new_post_samps,header=col_names,comments='',delimiter=',')
