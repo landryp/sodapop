@@ -1,0 +1,51 @@
+#!/usr/bin/env python
+
+'SAMPLE-POP-PARAMS -- sample population model parameters'
+__usage__ = 'sample-pop-params pop_model [-p prior1 prior2 ... -o /path/to/output.csv -v]'
+__author__ = 'Philippe Landry (pgjlandry@gmail.com)'
+__date__ = '02-2021'
+
+from argparse import ArgumentParser
+import numpy as np
+import os
+import sodapop.populations as pop
+import sodapop.parameters as params
+
+parser = ArgumentParser(description=__doc__)
+parser.add_argument('popmodel',type=str)
+parser.add_argument('-d', '--delim', help='delimiter for data file, DEFAULT=","', default=',')
+parser.add_argument('-n', '--numsamps', help='number of samples to draw, DEFAULT=1000', default=1000, type=float)
+parser.add_argument('-p', '--priors', help='prior distribution and hyperparameters for each population parameter, DEFAULT="flat,-1.,1."', default="flat,-1.,1.", type=str, nargs='+')
+parser.add_argument('-o', '--outpath', help='path for output reweighted samples, DEFAULT=AUTO', default=False)
+parser.add_argument('-v', '--verbose', action='store_true', default=False)
+args = parser.parse_args()
+
+if args.outpath: out_path = args.outpath
+else: out_path = '{0}_params.csv'.format(args.popmodel)
+
+num_samps = int(args.numsamps)
+
+# make dictionary of available population models and priors
+
+pop_dict = {'flat_m1m2': pop.flat_m1m2, 'doublegaussian_m1m2': pop.doublegaussian_m1m2, 'doublegaussian_m1_flat_m2': pop.doublegaussian_m1_flat_m2, 'doublegaussian_m1m2_qpair': pop.doublegaussian_m1m2_qpair, 'doublegaussian_m1_flat_m2_qpair': pop.doublegaussian_m1_flat_m2_qpair, 'o3a_powerpeak_m1m2_qpair': pop.o3a_powerpeak_m1m2_qpair, 'o3a_powerbreak_m1m2_qpair': pop.o3a_powerbreak_m1m2_qpair}
+
+params_dict = {'flat_m1m2': 'mmin,mmax', 'doublegaussian_m1m2': 'mu1,sigma1,mu2,sigma2,w', 'doublegaussian_m1_flat_m2': 'mu1,sigma1,mu2,sigma2,w', 'doublegaussian_m1m2_qpair': 'mu1,sigma1,mu2,sigma2,w,beta', 'doublegaussian_m1_flat_m2_qpair': 'mu1,sigma1,mu2,sigma2,w,beta', 'o3a_powerpeak_m1m2_qpair': 'lpeak,alpha,beta,mmin,mmax,delta,mu,sigma', 'o3a_powerbreak_m1m2_qpair': 'alpha1,alpha2,beta,mmin,mmax,delta,b'}
+
+param_names = params_dict[args.popmodel].split(',')
+
+# sample from parameter priors
+
+samps = []
+for i,param in enumerate(param_names):
+
+	priordat = args.priors[i].split(',')
+	prior_name = priordat[0]
+	hypparams = priordat[1:]
+	param_samps = params.get_param_samples(num_samps,prior_name,hypparams)
+	samps.append(param_samps)
+
+# save parameter samples
+
+param_samps = np.column_stack(samps)
+col_names = params_dict[args.popmodel] # COLUMN NAMES FOR OUTPUT
+np.savetxt(out_path,param_samps,header=col_names,comments='',delimiter=',')

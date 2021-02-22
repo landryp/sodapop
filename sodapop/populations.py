@@ -41,9 +41,9 @@ def flat(x): # truly flat prior
     
 # define available prior distributions in (m1,m2)
 
-def flat_m1m2(m1,m2,dL): # flat in source frame masses, subject to m1 >= m2 convention
+def flat_m1m2(m1,m2,dL,mmin=0.,mmax=1e10): # flat in source frame masses, subject to m1 >= m2 convention
     
-    if m1 >= m2: prior = 1.
+    if m1 >= m2 and m2 >= mmin and m1 <= mmax : prior = 1.
     else: prior = 0.
     
     return prior
@@ -69,9 +69,9 @@ def flat_mcetadet(m1,m2,dL,dL_prior=flat): # flat in chirp mass and symmetric ma
     
     return prior
     
-def doublegaussian_m1m2(m1,m2,dL): # double Gaussian for m1, m2, subject to m1 >= m2 convention
+def doublegaussian_m1m2(m1,m2,dL,mu1=1.34,sigma1=0.02,mu2=1.47,sigma2=0.15,w=0.68): # double Gaussian for m1, m2, subject to m1 >= m2 convention
     
-    if m1 >= m2: prior = double_gaussian(m1)*double_gaussian(m2)
+    if m1 >= m2: prior = double_gaussian(m1,mu1,sigma1,mu2,sigma2,w)*double_gaussian(m2,mu1,sigma1,mu2,sigma2,w)
     else: prior = 0.
     
     return prior

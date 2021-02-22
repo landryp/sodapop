@@ -1,0 +1,89 @@
+#!/usr/bin/env python
+
+'PLOT-POP-MODEL -- plot population model'
+__usage__ = 'plot-pop-model pop_model.csv [-p popmodel -o /path/to/plot.png -v]'
+__author__ = 'Philippe Landry (pgjlandry@gmail.com)'
+__date__ = '02-2021'
+
+from argparse import ArgumentParser
+import numpy as np
+import numpy.random
+import os
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
+import seaborn as sns
+import sodapop.populations as pop
+import videlicet.viz as viz
+
+parser = ArgumentParser(description=__doc__)
+parser.add_argument('popmodeldata')
+parser.add_argument('-d', '--delim', help='delimiter for data file, DEFAULT=","', default=',')
+parser.add_argument('-w', '--weightcol', help='name of posterior weight column to use, DEFAULT="weight"', default='weight')
+parser.add_argument('-p', '--popmodel', help='name of population model, DEFAULT="doublegaussian_m1m2"', default="doublegaussian_m1m2", type=str)
+parser.add_argument('-o', '--outpath', help='path for output population parameter samples, DEFAULT=AUTO', default=False)
+parser.add_argument('-v', '--verbose', action='store_true', default=False)
+args = parser.parse_args()
+
+if args.outpath: out_path = args.outpath
+else: out_path = os.path.dirname(args.popmodeldata)+'/'+os.path.basename(args.popmodeldata).split('.')[0]+'.png'
+
+MMIN = 0.5
+MMAX = 3.
+
+def ALPHA_FUNC(x):
+
+	return 0.1*x**100.
+
+# make dictionary of available population models
+
+pop_dict = {'flat_m1m2': pop.flat_m1m2, 'doublegaussian_m1m2': pop.doublegaussian_m1m2, 'doublegaussian_m1_flat_m2': pop.doublegaussian_m1_flat_m2, 'doublegaussian_m1m2_qpair': pop.doublegaussian_m1m2_qpair, 'doublegaussian_m1_flat_m2_qpair': pop.doublegaussian_m1_flat_m2_qpair, 'o3a_powerpeak_m1m2_qpair': pop.o3a_powerpeak_m1m2_qpair, 'o3a_powerbreak_m1m2_qpair': pop.o3a_powerbreak_m1m2_qpair}
+
+params_dict = {'flat_m1m2': 'mmin,mmax', 'doublegaussian_m1m2': 'mu1,sigma1,mu2,sigma2,w', 'doublegaussian_m1_flat_m2': 'mu1,sigma1,mu2,sigma2,w', 'doublegaussian_m1m2_qpair': 'mu1,sigma1,mu2,sigma2,w,beta', 'doublegaussian_m1_flat_m2_qpair': 'mu1,sigma1,mu2,sigma2,w,beta', 'o3a_powerpeak_m1m2_qpair': 'lpeak,alpha,beta,mmin,mmax,delta,mu,sigma', 'o3a_powerbreak_m1m2_qpair': 'alpha1,alpha2,beta,mmin,mmax,delta,b'}
+
+# load posterior samples
+
+popdata = np.genfromtxt(args.popmodeldata, names=True, dtype=None, delimiter=args.delim, encoding=None)
+param_names = params_dict[args.popmodel].split(',')
+params = np.column_stack([popdata[param_name] for param_name in param_names])
+wts = popdata[args.weightcol]
+wts = wts/np.sum(wts)
+maxap = np.max(wts)
+
+pop_like = pop_dict[args.popmodel]
+mgrid = np.arange(MMIN,MMAX,0.1)
+dLgrid = [0.]
+
+fig, ax = plt.subplots()
+
+for i,param in enumerate(params):
+
+	m1_likes = [np.sum([np.sum([pop_like(m1,m2,dL,*param) for dL in dLgrid]) for m2 in mgrid]) for m1 in mgrid]
+	m1_likes = m1_likes/np.sum(m1_likes)
+	plt.plot(mgrid, m1_likes, alpha=ALPHA_FUNC(wts[i]/maxap), color=sns.color_palette()[0], lw=2.)
+	
+viz.viz_style()
+plt.savefig(out_path.split('.png')[0]+'-m1.png')
+
+fig, ax = plt.subplots()
+
+for i,param in enumerate(params):
+
+	m2_likes = [np.sum([np.sum([pop_like(m1,m2,dL,*param) for dL in dLgrid]) for m1 in mgrid]) for m2 in mgrid]
+	m2_likes = m2_likes/np.sum(m2_likes)
+	plt.plot(mgrid, m2_likes, alpha=ALPHA_FUNC(wts[i]/maxap), color=sns.color_palette()[0], lw=2.)
+	
+viz.viz_style()
+plt.savefig(out_path.split('.png')[0]+'-m2.png')
+
+for i,param in enumerate(params):
+
+	m1_likes = [np.sum([np.sum([pop_like(m1,m2,dL,*param) for dL in dLgrid]) for m2 in mgrid]) for m1 in mgrid]
+	m1_likes = m1_likes/np.sum(m1_likes)
+	m2_likes = [np.sum([np.sum([pop_like(m1,m2,dL,*param) for dL in dLgrid]) for m1 in mgrid]) for m2 in mgrid]
+	m2_likes = m2_likes/np.sum(m2_likes)
+	plt.plot(mgrid, m1_likes, alpha=ALPHA_FUNC(wts[i]/maxap), color=sns.color_palette()[0], lw=2.)
+	plt.plot(mgrid, m2_likes, alpha=ALPHA_FUNC(wts[i]/maxap), color=sns.color_palette()[0], lw=2.)
+	
+viz.viz_style()
+plt.savefig(out_path)
