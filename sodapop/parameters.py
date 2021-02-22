@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
 import numpy as np
-from scipy.stats import uniform
-from lidenbrock.eos import check_stability, find_branch
+from scipy.stats import uniform, norm
 
 def flat(size=1,lb=0.,ub=1.):
 
