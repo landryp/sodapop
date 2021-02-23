@@ -8,7 +8,7 @@ __date__ = '01-2021'
 from argparse import ArgumentParser
 import numpy as np
 import os
-import sodapop.populations as pop
+import sodapop.priors as priors
 
 parser = ArgumentParser(description=__doc__)
 parser.add_argument('data')
@@ -23,12 +23,10 @@ args = parser.parse_args()
 if args.outpath: out_path = args.outpath
 else: out_path = os.path.dirname(args.data)+'/'+os.path.basename(args.data).split('.')[-2]+'_reweighted.csv'
 
-# make dictionary of available priors
+# get specified prior distributions
 
-prior_dict = {'flat_m1m2': pop.flat_m1m2, 'flat_m1m2det': pop.flat_m1m2det, 'flat_mceta': pop.flat_mceta, 'flat_mcetadet': pop.flat_mcetadet, 'doublegaussian_m1m2': pop.doublegaussian_m1m2, 'doublegaussian_m1_flat_m2': pop.doublegaussian_m1_flat_m2, 'doublegaussian_m1m2_qpair': pop.doublegaussian_m1m2_qpair, 'doublegaussian_m1_flat_m2_qpair': pop.doublegaussian_m1_flat_m2_qpair, 'o3a_powerpeak_m1m2_qpair': pop.o3a_powerpeak_m1m2_qpair, 'o3a_powerbreak_m1m2_qpair': pop.o3a_powerbreak_m1m2_qpair}
-
-old_prior = prior_dict[args.oldprior]
-new_prior = prior_dict[args.newprior]
+old_prior = priors.get_binary_mass_prior(args.oldprior)
+new_prior = priors.get_binary_mass_prior(args.newprior)
 
 # load posterior samples
 

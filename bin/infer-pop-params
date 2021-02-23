@@ -15,7 +15,7 @@ parser = ArgumentParser(description=__doc__)
 parser.add_argument('popparams')
 parser.add_argument('likedata', nargs='+')
 parser.add_argument('-d', '--delim', help='delimiter for data file, DEFAULT=","', default=',')
-parser.add_argument('-c', '--cols', help='name of mass1, mass2, distance and likelihood data columns to use, DEFAULT="m1 m2 dL likelihood"', default=['m1','m2','dL','likelihood'], nargs=4)
+parser.add_argument('-c', '--cols', help='name of mass1, mass2 and likelihood data columns to use, DEFAULT="m1 m2 likelihood"', default=['m1','m2','likelihood'], nargs='+')
 parser.add_argument('-p', '--popmodel', help='name of population model, DEFAULT="doublegaussian_m1m2"', default="doublegaussian_m1m2", type=str)
 parser.add_argument('-o', '--outpath', help='path for output population parameter samples, DEFAULT=AUTO', default=False)
 parser.add_argument('-v', '--verbose', action='store_true', default=False)
@@ -24,11 +24,11 @@ args = parser.parse_args()
 if args.outpath: out_path = args.outpath
 else: out_path = os.path.dirname(args.likedata[0])+'/'+args.popmodel+'.csv'
 
-# make dictionary of available population models
+num_masses = len(args.cols)-1
 
-pop_dict = {'flat_m1m2': pop.flat_m1m2, 'doublegaussian_m1m2': pop.doublegaussian_m1m2, 'doublegaussian_m1_flat_m2': pop.doublegaussian_m1_flat_m2, 'doublegaussian_m1m2_qpair': pop.doublegaussian_m1m2_qpair, 'doublegaussian_m1_flat_m2_qpair': pop.doublegaussian_m1_flat_m2_qpair, 'o3a_powerpeak_m1m2_qpair': pop.o3a_powerpeak_m1m2_qpair, 'o3a_powerbreak_m1m2_qpair': pop.o3a_powerbreak_m1m2_qpair}
+# get population model
 
-params_dict = {'flat_m1m2': 'mmin,mmax', 'doublegaussian_m1m2': 'mu1,sigma1,mu2,sigma2,w', 'doublegaussian_m1_flat_m2': 'mu1,sigma1,mu2,sigma2,w', 'doublegaussian_m1m2_qpair': 'mu1,sigma1,mu2,sigma2,w,beta', 'doublegaussian_m1_flat_m2_qpair': 'mu1,sigma1,mu2,sigma2,w,beta', 'o3a_powerpeak_m1m2_qpair': 'lpeak,alpha,beta,mmin,mmax,delta,mu,sigma', 'o3a_powerbreak_m1m2_qpair': 'alpha1,alpha2,beta,mmin,mmax,delta,b'}
+pop_like = pop.get_pop_prior(args.popmodel)
 
 # load posterior samples
 
@@ -38,38 +38,36 @@ for likedata in args.likedata:
 	data = np.genfromtxt(likedata,names=True,dtype=None,delimiter=args.delim)
 	cols = data.dtype.names
 	if args.verbose: print(cols) # check column names; use source-frame masses and dimensionless spins
+	
+	wts = data[args.cols[-1]]
 
-	m1s = data[args.cols[0]] # COLUMN NAMES FOR INPUT
-	m2s = data[args.cols[1]]
-	dLs = data[args.cols[2]]
-	wts = data[args.cols[3]]
-	samps = list(zip(m1s,m2s,dLs,wts))
+	if num_masses == 2:
+		m1s = data[args.cols[0]] # COLUMN NAMES FOR INPUT
+		m2s = data[args.cols[1]]
+		samps = list(zip(m1s,m2s,wts))
+	else:	
+		ms = data[args.cols[0]]
+		samps = list(zip(ms,wts))
 	
 	likesamps.append(samps)
 		
 # calculate population parameter posterior
 
 pop_params = np.genfromtxt(args.popparams, names=None, dtype=None, delimiter=args.delim, skip_header=1)
-pop_like = pop_dict[args.popmodel]
 
 posts = []
-for params in pop_params:
+for i,params in enumerate(pop_params):
 
-	likes = []
-	for samps in likesamps:
+	if args.verbose: print('Evaluating probability of population model {0}...'.format(i))
 
-		like = 0.
-		for samp in samps:
-
-			m1, m2, dL, wt = samp
-			like = like + wt*pop_like(m1,m2,dL,*params)
-		
-		likes.append(like)
-	
+	if num_masses == 2:
+		likes = [np.sum([wt*pop_like(m1,m2,*params) for m1,m2,wt in samps]) for samps in likesamps]
+	else:
+		likes = [np.sum([wt*pop_like(m,*params) for m,wt in samps]) for samps in likesamps]
 	params_post = np.prod(likes)
 	posts.append([params_post])
 
 # save population parameters posterior
 pop_param_samps = np.append(np.array(pop_params),np.array(posts),axis=1)
-col_names = params_dict[args.popmodel]+',weight' # COLUMN NAMES FOR OUTPUT
+col_names = pop.get_pop_params(args.popmodel)+',weight' # COLUMN NAMES FOR OUTPUT
 np.savetxt(out_path,pop_param_samps,header=col_names,comments='',delimiter=',')
