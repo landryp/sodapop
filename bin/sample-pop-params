@@ -40,8 +40,30 @@ for i,param in enumerate(param_names):
 	param_samps = params.get_param_samples(num_samps,prior_name,hypparams)
 	samps.append(param_samps)
 
+# ensure mmax parameter > mmin parameter
+
+if 'mmax' in param_names and 'mmin' in param_names:
+
+	mmaxs = samps[param_names.index('mmax')]
+	mmins = samps[param_names.index('mmin')]
+	
+	mmaxs_out = []
+	mmins_out = []
+	for mmax,mmin in zip(mmaxs,mmins):
+	
+		mmaxs_out.append(max(mmax,mmin))
+		mmins_out.append(min(mmax,mmin))
+		
+samps_out = []
+for i,param in enumerate(param_names):
+
+	if param == 'mmax': samps_out.append(mmaxs_out)
+	elif param == 'mmin': samps_out.append(mmins_out)
+	else: samps_out.append(samps[i])
+	
+
 # save parameter samples
 
-param_samps = np.column_stack(samps)
+param_samps = np.column_stack(samps_out)
 col_names = pop.get_pop_params(args.popmodel) # COLUMN NAMES FOR OUTPUT
 np.savetxt(out_path,param_samps,header=col_names,comments='',delimiter=',')
