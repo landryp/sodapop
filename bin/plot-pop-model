@@ -23,7 +23,7 @@ parser.add_argument('-w', '--weightcol', help='name of posterior weight column t
 parser.add_argument('-p', '--popmodel', help='name of population model, DEFAULT="doublegaussian_m1m2"', default="doublegaussian_m1m2", type=str)
 parser.add_argument('-o', '--outpath', help='path for output population parameter samples, DEFAULT=AUTO', default=False)
 parser.add_argument('-m', '--mrange', help='mass range for plot, DEFAULT="0.5 3."', default=[0.5,3.])
-parser.add_argument('-n', '--nummods', help='number of population model realizations to use for computing confidence intervals, DEFAULT=1000', default=1e4, type=float)
+parser.add_argument('-n', '--nummods', help='number of population model realizations to use for computing confidence intervals, DEFAULT=10000', default=1e4, type=float)
 parser.add_argument('-b', '--binary', help='make separate m1 and m2 plots', action='store_false', default=True)
 parser.add_argument('-M', '--maxap', help='plot the maximum a posteriori instead of the median', action='store_true', default=False)
 parser.add_argument('-f', '--fairdraws', help='number of population model realizations to plot, DEFAULT=None', default=False, type=float)

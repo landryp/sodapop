@@ -40,7 +40,7 @@ for i,param in enumerate(param_names):
 	param_samps = params.get_param_samples(num_samps,prior_name,hypparams)
 	samps.append(param_samps)
 
-# ensure mmax parameter > mmin parameter
+# ensure mmax parameter > mmin parameter and mu2 parameter > mu1 parameter
 
 if 'mmax' in param_names and 'mmin' in param_names:
 
@@ -54,11 +54,25 @@ if 'mmax' in param_names and 'mmin' in param_names:
 		mmaxs_out.append(max(mmax,mmin))
 		mmins_out.append(min(mmax,mmin))
 		
+if 'mu1' in param_names and 'mu2' in param_names:
+
+	mu1s = samps[param_names.index('mu1')]
+	mu2s = samps[param_names.index('mu2')]
+	
+	mu1s_out = []
+	mu2s_out = []
+	for mu1,mu2 in zip(mu1s,mu2s):
+	
+		mu1s_out.append(min(mu1,mu2))
+		mu2s_out.append(max(mu1,mu2))
+		
 samps_out = []
 for i,param in enumerate(param_names):
 
 	if param == 'mmax': samps_out.append(mmaxs_out)
 	elif param == 'mmin': samps_out.append(mmins_out)
+	elif param == 'mu1': samps_out.append(mu1s_out)
+	elif param == 'mu2': samps_out.append(mu2s_out)
 	else: samps_out.append(samps[i])
 	
 
