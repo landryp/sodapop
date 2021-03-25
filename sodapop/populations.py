@@ -26,6 +26,20 @@ def smooth(m,mmin,delta):
     
 	return val
 
+def snrcut(m1,m2,dl,snr0=8.): # snr selection function from https://arxiv.org/abs/1108.5161
+
+	Mc = (m1*m2)**(3./5.)/(m1+m2)**(1./5.)
+	z = 0. # ignore cosmology
+	Mcdet = Mc*(1.+z)
+	r0 = 176. # Mpc
+	x = (snr0/8.)*(dl/r0)*(1.2/Mcdet)**(5./6.)
+
+	if x <= 0: C = 1.
+	elif x > 0. and x <= 4.: C = (1.+x)*(4.-x)**4./256.
+	else: C = 0.
+
+	return C
+
 ### INDIVIDUAL MASS DISTRIBUTIONS
 
 def unif_mass(m,mmin=1.,mmax=3.): # uniform mass distribution between mmin and mmax
@@ -189,12 +203,112 @@ def o3a_powerbreak_m1m2_qpair(m1,m2,alpha1=1.58,alpha2=5.59,beta=1.40,mmin=4.83,
     else: val = 0.
     
     return val
+
+### BINARY MASS DISTRIBUTIONS WITH SNR SELECTION EFFECT
+
+def unif_m1m2_snrcut(m1,m2,dl,mmin=5.,mmax=2e2): # uniform distribution in source frame masses, subject to m1 >= m2 convention
+
+	if m1 < m2 or m1 > mmax or m2 < mmin: val = 0.
+	else: val = 1./(mmax-mmin)**2
+    
+	return val*snrcut(m1,m2,dl)
+	
+def peak_m1m2_snrcut(m1,m2,dl,mu=1.34,sigma=0.02): # gaussian distribution in source frame masses, subject to m1 >= m2 convention
+
+	if m1 < m2: val = 0.
+	else: val = gaussian(m1,mu,sigma)*gaussian(m2,mu,sigma)
+	
+	return val*snrcut(m1,m2,dl)
+	
+def bimod_m1m2_snrcut(m1,m2,dl,mu1=1.34,sigma1=0.02,mu2=1.47,sigma2=0.15,alpha=0.68,norms=False): # double gaussian distribution in source frame masses, subject to m1 >= m2 convention
+
+	if m1 < m2: val = 0.
+	else:
+		if norms:
+			norm1 = 0.5*(scipy.special.erf(mu1/(np.sqrt(2)*sigma1))+1.)
+			norm2 = 0.5*(scipy.special.erf(mu2/(np.sqrt(2)*sigma2))+1.)
+		else:
+			norm1 = 1.
+			norm2 = 1.
+		val = (alpha*gaussian(m1,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m1,mu2,sigma2)/norm2)*(alpha*gaussian(m2,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m2,mu2,sigma2)/norm2)
+	
+	return val*snrcut(m1,m2,dl)
+	
+def peakcut_m1m2_snrcut(m1,m2,dl,mu=1.34,sigma=0.02,mmin=1.,mmax=3.): # gaussian distribution in source frame masses with high- and low-mass cutoffs, subject to m1 >= m2 convention
+
+	if m1 < m2 or m1 > mmax or m2 < mmin: val = 0.
+	else: val = gaussian(m1,mu,sigma)*gaussian(m2,mu,sigma)
+	
+	return val*snrcut(m1,m2,dl)
+	
+def bimodcut_m1m2_snrcut(m1,m2,dl,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,alpha=0.65,mmin=0.9,mmax=2.12,norms=True): # double gaussian mass distribution with high- and low-mass cutoffs from Alsing+
+
+	if m1 < m2 or m1 > mmax or m2 < mmin: val = 0.
+	else:
+		if norms:
+			norm1 = 0.5*(scipy.special.erf((mmax-mu1)/(np.sqrt(2)*sigma1))-scipy.special.erf((mmin-mu1)/(np.sqrt(2)*sigma1)))
+			norm2 = 0.5*(scipy.special.erf((mmax-mu2)/(np.sqrt(2)*sigma2))-scipy.special.erf((mmin-mu2)/(np.sqrt(2)*sigma2)))
+		else:
+			norm1 = 1.
+			norm2 = 1.
+		val = (alpha*gaussian(m1,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m1,mu2,sigma2)/norm2)*(alpha*gaussian(m2,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m2,mu2,sigma2)/norm2)
+	
+	return val*snrcut(m1,m2,dl)
+	
+def peak_m1_unif_m2_snrcut(m1,m2,dl,mu=1.34,sigma=0.02,mmin=1.,mmax=3.): # gaussian distribution in source frame masses with high- and low-mass cutoffs, subject to m1 >= m2 convention
+
+	if m1 < m2: val = 0.
+	else: val = gaussian(m1,mu,sigma)*unif_mass(m2,mmin,mmax)
+	
+	return val*snrcut(m1,m2,dl)
+	
+def bimod_m1_unif_m2_snrcut(m1,m2,dl,mu1=1.34,sigma1=0.02,mu2=1.47,sigma2=0.15,alpha=0.68,mmin=1.,mmax=3.,norms=False): # double gaussian mass distribution with high- and low-mass cutoffs
+
+	if m1 < m2: val = 0.
+	else:
+		if norms:
+			norm1 = 0.5*(scipy.special.erf(mu1/(np.sqrt(2)*sigma1))+1.)
+			norm2 = 0.5*(scipy.special.erf(mu2/(np.sqrt(2)*sigma2))+1.)
+		else:
+			norm1 = 1.
+			norm2 = 1.
+		val = (alpha*gaussian(m1,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m1,mu2,sigma2)/norm2)*unif_mass(m2,mmin,mmax)
+	
+	return val*snrcut(m1,m2,dl)
+	
+def unif_m1m2_qpair_snrcut(m1,m2,dl,mmin=5.,mmax=2e2,beta=0.): # uniform distribution in source frame masses, subject to m1 >= m2 convention and q-dependent pairing
+
+	if m1 < m2 or m1 > mmax or m2 < mmin: val = 0.
+	else: val = (m2/m1)**beta
+    
+	return val*snrcut(m1,m2,dl)
+	
+def peakcut_m1m2_qpair_snrcut(m1,m2,dl,mu=1.34,sigma=0.02,mmin=1.,mmax=3.,beta=0.): # gaussian distribution in source frame masses, subject to m1 >= m2 convention and q-dependent pairing
+
+	if m1 < m2 or m1 > mmax or m2 < mmin: val = 0.
+	else: val = gaussian(m1,mu,sigma)*gaussian(m2,mu,sigma)*(m2/m1)**beta
+	
+	return val*snrcut(m1,m2,dl)
+	
+def bimodcut_m1m2_qpair_snrcut(m1,m2,dl,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,alpha=0.65,mmin=0.9,mmax=2.12,beta=0.,norms=True): # double gaussian Alsing+ distribution in source frame masses, subject to m1 >= m2 convention and q-dependent pairing
+
+	if m1 < m2 or m1 > mmax or m2 < mmin: val = 0.
+	else:
+		if norms:
+			norm1 = 0.5*(scipy.special.erf((mmax-mu1)/(np.sqrt(2)*sigma1))-scipy.special.erf((mmin-mu1)/(np.sqrt(2)*sigma1)))
+			norm2 = 0.5*(scipy.special.erf((mmax-mu2)/(np.sqrt(2)*sigma2))-scipy.special.erf((mmin-mu2)/(np.sqrt(2)*sigma2)))
+		else:
+			norm1 = 1.
+			norm2 = 1.
+		val = (alpha*gaussian(m1,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m1,mu2,sigma2)/norm2)*(alpha*gaussian(m2,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m2,mu2,sigma2)/norm2)*q**beta
+	
+	return val*snrcut(m1,m2,dl)
     
 ### PRIOR LOOKUP FUNCTIONS
 	
-pop_priors = {'unif_mass': unif_mass, 'peak_mass': peak_mass, 'bimod_mass': bimod_mass, 'peakcut_mass': peakcut_mass, 'bimodcut_mass': bimodcut_mass, 'unif_m1m2': unif_m1m2, 'peak_m1m2': peak_m1m2, 'bimod_m1m2': bimod_m1m2, 'peakcut_m1m2': peakcut_m1m2, 'bimodcut_m1m2': bimodcut_m1m2, 'peak_m1_unif_m2': peak_m1_unif_m2, 'bimod_m1_unif_m2': bimod_m1_unif_m2, 'unif_m1m2_qpair': unif_m1m2_qpair, 'peakcut_m1m2_qpair': peakcut_m1m2_qpair, 'bimodcut_m1m2_qpair': bimodcut_m1m2_qpair, 'o3a_powerpeak_m1m2_qpair': o3a_powerpeak_m1m2_qpair, 'o3a_powerbreak_m1m2_qpair': o3a_powerbreak_m1m2_qpair}
+pop_priors = {'unif_mass': unif_mass, 'peak_mass': peak_mass, 'bimod_mass': bimod_mass, 'peakcut_mass': peakcut_mass, 'bimodcut_mass': bimodcut_mass, 'unif_m1m2': unif_m1m2, 'peak_m1m2': peak_m1m2, 'bimod_m1m2': bimod_m1m2, 'peakcut_m1m2': peakcut_m1m2, 'bimodcut_m1m2': bimodcut_m1m2, 'peak_m1_unif_m2': peak_m1_unif_m2, 'bimod_m1_unif_m2': bimod_m1_unif_m2, 'unif_m1m2_qpair': unif_m1m2_qpair, 'peakcut_m1m2_qpair': peakcut_m1m2_qpair, 'bimodcut_m1m2_qpair': bimodcut_m1m2_qpair, 'o3a_powerpeak_m1m2_qpair': o3a_powerpeak_m1m2_qpair, 'o3a_powerbreak_m1m2_qpair': o3a_powerbreak_m1m2_qpair, 'unif_m1m2_snrcut': unif_m1m2_snrcut, 'peak_m1m2_snrcut': peak_m1m2_snrcut, 'bimod_m1m2_snrcut': bimod_m1m2_snrcut, 'peakcut_m1m2_snrcut': peakcut_m1m2_snrcut, 'bimodcut_m1m2_snrcut': bimodcut_m1m2_snrcut, 'peak_m1_unif_m2_snrcut': peak_m1_unif_m2_snrcut, 'bimod_m1_unif_m2_snrcut': bimod_m1_unif_m2_snrcut, 'unif_m1m2_qpair_snrcut': unif_m1m2_qpair_snrcut, 'peakcut_m1m2_qpair_snrcut': peakcut_m1m2_qpair_snrcut, 'bimodcut_m1m2_qpair_snrcut': bimodcut_m1m2_qpair_snrcut,}
 
-pop_params = {'unif_mass': 'mmin,mmax', 'peak_mass': 'mu,sigma', 'bimod_mass': 'mu1,sigma1,mu2,sigma2,alpha', 'peakcut_mass': 'mu,sigma,mmin,mmax', 'bimodcut_mass': 'mu1,sigma1,mu2,sigma2,alpha,mmin,mmax', 'unif_m1m2': 'mmin,mmax', 'peak_m1m2': 'mu,sigma', 'bimod_m1m2': 'mu1,sigma1,mu2,sigma2,alpha', 'peakcut_m1m2': 'mu,sigma,mmin,mmax', 'bimodcut_m1m2': 'mu1,sigma1,mu2,sigma2,alpha,mmin,mmax', 'peak_m1_unif_m2': 'mu,sigma,mmin,mmax', 'bimod_m1_unif_m2': 'mu1,sigma1,mu2,sigma2,alpha,mmin,mmax', 'unif_m1m2_qpair': 'mmin,mmax,beta', 'peakcut_m1m2_qpair': 'mu,sigma,mmin,mmax,beta', 'bimodcut_m1m2_qpair': 'mu1,sigma1,mu2,sigma2,alpha,mmin,mmax,beta', 'o3a_powerpeak_m1m2_qpair': 'lpeak,alpha,beta,mmin,mmax,delta,mu,sigma', 'o3a_powerbreak_m1m2_qpair': 'alpha1,alpha2,beta,mmin,mmax,delta,b'}
+pop_params = {'unif_mass': 'mmin,mmax', 'peak_mass': 'mu,sigma', 'bimod_mass': 'mu1,sigma1,mu2,sigma2,alpha', 'peakcut_mass': 'mu,sigma,mmin,mmax', 'bimodcut_mass': 'mu1,sigma1,mu2,sigma2,alpha,mmin,mmax', 'unif_m1m2': 'mmin,mmax', 'peak_m1m2': 'mu,sigma', 'bimod_m1m2': 'mu1,sigma1,mu2,sigma2,alpha', 'peakcut_m1m2': 'mu,sigma,mmin,mmax', 'bimodcut_m1m2': 'mu1,sigma1,mu2,sigma2,alpha,mmin,mmax', 'peak_m1_unif_m2': 'mu,sigma,mmin,mmax', 'bimod_m1_unif_m2': 'mu1,sigma1,mu2,sigma2,alpha,mmin,mmax', 'unif_m1m2_qpair': 'mmin,mmax,beta', 'peakcut_m1m2_qpair': 'mu,sigma,mmin,mmax,beta', 'bimodcut_m1m2_qpair': 'mu1,sigma1,mu2,sigma2,alpha,mmin,mmax,beta', 'o3a_powerpeak_m1m2_qpair': 'lpeak,alpha,beta,mmin,mmax,delta,mu,sigma', 'o3a_powerbreak_m1m2_qpair': 'alpha1,alpha2,beta,mmin,mmax,delta,b','unif_m1m2_snrcut': 'mmin,mmax', 'peak_m1m2_snrcut': 'mu,sigma', 'bimod_m1m2_snrcut': 'mu1,sigma1,mu2,sigma2,alpha', 'peakcut_m1m2_snrcut': 'mu,sigma,mmin,mmax', 'bimodcut_m1m2_snrcut': 'mu1,sigma1,mu2,sigma2,alpha,mmin,mmax', 'peak_m1_unif_m2_snrcut': 'mu,sigma,mmin,mmax', 'bimod_m1_unif_m2_snrcut': 'mu1,sigma1,mu2,sigma2,alpha,mmin,mmax', 'unif_m1m2_qpair_snrcut': 'mmin,mmax,beta', 'peakcut_m1m2_qpair_snrcut': 'mu,sigma,mmin,mmax,beta', 'bimodcut_m1m2_qpair_snrcut': 'mu1,sigma1,mu2,sigma2,alpha,mmin,mmax,beta'}
 
 def get_pop_prior(key):
 
