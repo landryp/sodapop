@@ -115,7 +115,7 @@ def bimodcut_m1m2(m1,m2,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,alpha=0.65,mmi
 
 	if m1 < m2 or m1 > mmax or m2 < mmin: val = 0.
 	else:
-		if norms=True:
+		if norms:
 			norm1 = 0.5*(scipy.special.erf((mmax-mu1)/(np.sqrt(2)*sigma1))-scipy.special.erf((mmin-mu1)/(np.sqrt(2)*sigma1)))
 			norm2 = 0.5*(scipy.special.erf((mmax-mu2)/(np.sqrt(2)*sigma2))-scipy.special.erf((mmin-mu2)/(np.sqrt(2)*sigma2)))
 		else:
