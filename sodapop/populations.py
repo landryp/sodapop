@@ -245,7 +245,16 @@ def o3a_powerpeak_m1_unif_m2(m1,m2,mu=1.34,sigma=0.02,mmin=1.,mmax=3.):
 def unif_m1_unif_m2(m1,m2,mmin=1.,mmax=3.,mmin_bh=3.,mmax_bh=23.): # uniform distribution in source frame masses, subject to m1 >= m2 convention
 
 	if m1 < m2 or m2 > mmax or m2 < mmin or m1 < mmin_bh or m1 > mmax_bh: val = 0.
-	else: val = 1./(mmax-mmin)*(mmax_bh-mmin_bh)
+	else: val = 1./((mmax-mmin)*(mmax_bh-mmin_bh))
+    
+	return val
+	
+def unif_m1_unif_m2_qpair(m1,m2,mmin=1.,mmax=3.,beta=2.,mmin_bh=3.,mmax_bh=23.): # uniform distribution in source frame masses, subject to m1 >= m2 convention
+
+	if m1 < m2 or m2 > mmax or m2 < mmin or m1 < mmin_bh or m1 > mmax_bh: val = 0.
+	else:
+		norm = -(mmax_bh*mmin_bh)**(-beta)*(mmax**(beta+1)-mmin**(beta+1))*(mmax_bh*mmin_bh**beta-mmin_bh*mmax_bh**beta)/(beta**2-1.)
+		val = (m2/m1)**beta/norm
     
 	return val
 	
