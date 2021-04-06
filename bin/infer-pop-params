@@ -41,12 +41,14 @@ else: select_func = lambda *x : 1.
 
 # load likelihood samples
 
+if args.verbose: print('Loading likelihood data...')
+
 likesamps = []
 for likedata in args.likedata:
 
 	data = np.genfromtxt(likedata,names=True,dtype=None,delimiter=args.delim)
 	cols = data.dtype.names
-	if args.verbose: print(cols) # check column names; use source-frame masses and dimensionless spins
+	if args.verbose: print(cols) # check column names; use source-frame masses
 	
 	wts = data[args.cols[-1]]
 
