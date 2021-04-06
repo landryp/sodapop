@@ -16,7 +16,7 @@ parser.add_argument('popparams')
 parser.add_argument('likedata', nargs='+')
 parser.add_argument('-d', '--delim', help='delimiter for data file, DEFAULT=","', default=',')
 parser.add_argument('-c', '--cols', help='name of mass1, mass2 and likelihood data columns to use, DEFAULT="m1 m2 likelihood"', default=['m1','m2','likelihood'], nargs='+')
-parser.add_argument('-p', '--popmodel', help='name of population model, DEFAULT="doublegaussian_m1m2"', default="doublegaussian_m1m2", type=str)
+parser.add_argument('-p', '--popmodel', help='name of population model, DEFAULT="doublegaussian_m1m2"', default="doublegaussian_m1m2", nargs='+')
 parser.add_argument('-s', '--select', help='name of selection function, DEFAULT=False', default=False)
 parser.add_argument('-o', '--outpath', help='path for output population parameter samples, DEFAULT=AUTO', default=False)
 parser.add_argument('-v', '--verbose', action='store_true', default=False)
@@ -33,7 +33,8 @@ num_masses = len(args.cols)-1
 
 # get population model
 
-pop_prob = pop.get_pop_prior(args.popmodel)
+if len(args.popmodel) == 1: pop_probs = [pop.get_pop_prior(args.popmodel[0]) for likedata in args.likedata]
+else: pop_probs = [pop.get_pop_prior(args.popmodel[i]) for i,likedata in enumerate(args.likedata)]
 
 if args.select: select_func = pop.get_select_func(args.select)
 else: select_func = lambda *x : 1.
@@ -75,6 +76,8 @@ pop_params = np.genfromtxt(args.popparams, names=None, dtype=None, delimiter=arg
 
 posts = []
 for i,params in enumerate(pop_params):
+
+	pop_prob = pop_probs[i]
 
 	if args.verbose: print('Evaluating probability of population model {0}...'.format(i))
 

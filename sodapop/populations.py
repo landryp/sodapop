@@ -6,10 +6,10 @@ import scipy.integrate
 
 ### BASIC ANALYTIC DISTRIBUTIONS
 
-def powerlaw(m,alpha,mmax):
+def powerlaw(m,alpha,mmin,mmax):
 
-	if m > mmax: val = 0.
-	else: val = m**alpha
+	if m > mmax or m < mmin: val = 0.
+	else: val = (1.+alpha)*m**alpha/(mmax**(1.+alpha)-mmin**(1.+alpha))
         
 	return val
 
@@ -216,7 +216,8 @@ def bimodcut_m1m2_qpair(m1,m2,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,alpha=0.
 	
 def o3a_powerpeak_m1m2_qpair(m1,m2,lpeak=0.10,alpha=2.62,beta=1.26,mmin=4.53,mmax=86.73,delta=4.88,mu=33.49,sigma=5.09): # power law + peak mass model from O3a populations paper
     
-	val = ((1.-lpeak)*powerlaw(m1,-alpha,mmax)+lpeak*gaussian(m1,mu,sigma))*smooth(m1,mmin,delta)*(m2/m1)**beta*smooth(m2,mmin,delta)/m1
+    	norm = 0.5*(scipy.special.erf((mmax-mu)/(np.sqrt(2)*sigma))-scipy.special.erf((mmin-mu)/(np.sqrt(2)*sigma)))
+	val = ((1.-lpeak)*powerlaw(m1,-alpha,mmin,mmax)+lpeak*gaussian(m1,mu,sigma)/norm)*smooth(m1,mmin,delta)*(m2/m1)**beta*smooth(m2,mmin,delta)/m1
     
 	return val # FIXME: normalize me!
 
@@ -229,10 +230,30 @@ def o3a_powerbreak_m1m2_qpair(m1,m2,alpha1=1.58,alpha2=5.59,beta=1.40,mmin=4.83,
     else: val = 0.
     
     return val # FIXME: normalize me!
-	
-pop_priors = {'unif_mass': unif_mass, 'peak_mass': peak_mass, 'bimod_mass': bimod_mass, 'peakcut_mass': peakcut_mass, 'bimodcut_mass': bimodcut_mass, 'unif_m1m2': unif_m1m2, 'peak_m1m2': peak_m1m2, 'bimod_m1m2': bimod_m1m2, 'peakcut_m1m2': peakcut_m1m2, 'bimodcut_m1m2': bimodcut_m1m2, 'peakcut_m1_unif_m2': peakcut_m1_unif_m2, 'bimodcut_m1_unif_m2': bimod_m1_unif_m2, 'unif_m1m2_qpair': unif_m1m2_qpair, 'peakcut_m1m2_qpair': peakcut_m1m2_qpair, 'bimodcut_m1m2_qpair': bimodcut_m1m2_qpair, 'o3a_powerpeak_m1m2_qpair': o3a_powerpeak_m1m2_qpair, 'o3a_powerbreak_m1m2_qpair': o3a_powerbreak_m1m2_qpair}
 
-pop_params = {'unif_mass': 'mmin,mmax', 'peak_mass': 'mu,sigma', 'bimod_mass': 'mu1,sigma1,mu2,sigma2,alpha', 'peakcut_mass': 'mu,sigma,mmin,mmax', 'bimodcut_mass': 'mu1,sigma1,mu2,sigma2,alpha,mmin,mmax', 'unif_m1m2': 'mmin,mmax', 'peak_m1m2': 'mu,sigma', 'bimod_m1m2': 'mu1,sigma1,mu2,sigma2,alpha', 'peakcut_m1m2': 'mu,sigma,mmin,mmax', 'bimodcut_m1m2': 'mu1,sigma1,mu2,sigma2,alpha,mmin,mmax', 'peakcut_m1_unif_m2': 'mu,sigma,mmin,mmax', 'bimodcut_m1_unif_m2': 'mu1,sigma1,mu2,sigma2,alpha,mmin,mmax', 'unif_m1m2_qpair': 'mmin,mmax,beta', 'peakcut_m1m2_qpair': 'mu,sigma,mmin,mmax,beta', 'bimodcut_m1m2_qpair': 'mu1,sigma1,mu2,sigma2,alpha,mmin,mmax,beta', 'o3a_powerpeak_m1m2_qpair': 'lpeak,alpha,beta,mmin,mmax,delta,mu,sigma', 'o3a_powerbreak_m1m2_qpair': 'alpha1,alpha2,beta,mmin,mmax,delta,b'}
+def o3a_powerpeak_m1_unif_m2(m1,m2,mu=1.34,sigma=0.02,mmin=1.,mmax=3.):
+
+	if m1 < m2 or m2 > mmax or m2 < mmin: val = 0.
+	else:
+		norm = 0.5*(scipy.special.erf((mmax-mu)/(np.sqrt(2)*sigma))-scipy.special.erf((mmin-mu)/(np.sqrt(2)*sigma)))
+		val = ((1.-lpeak)*powerlaw(m1,-alpha,mmin,mmax)+lpeak*gaussian(m1,mu,sigma)/norm)*smooth(m1,mmin,delta)*unif_mass(m2,mmin,mmax)
+	
+	return val
+	
+# NSBH MASS DISTRIBUTIONS
+
+def unif_m1_unif_m2(m1,m2,mmin=1.,mmax=3.,mmin_bh=3.,mmax_bh=23.): # uniform distribution in source frame masses, subject to m1 >= m2 convention
+
+	if m1 < m2 or m2 > mmax or m2 < mmin or m1 < mmin_bh or m1 > mmax_bh: val = 0.
+	else: val = 1./(mmax-mmin)*(mmax_bh-mmin_bh)
+    
+	return val
+	
+# LOOKUP FUNCTIONS
+
+pop_priors = {'unif_mass': unif_mass, 'peak_mass': peak_mass, 'bimod_mass': bimod_mass, 'peakcut_mass': peakcut_mass, 'bimodcut_mass': bimodcut_mass, 'unif_m1m2': unif_m1m2, 'peak_m1m2': peak_m1m2, 'bimod_m1m2': bimod_m1m2, 'peakcut_m1m2': peakcut_m1m2, 'bimodcut_m1m2': bimodcut_m1m2, 'peakcut_m1_unif_m2': peakcut_m1_unif_m2, 'bimodcut_m1_unif_m2': bimodcut_m1_unif_m2, 'unif_m1m2_qpair': unif_m1m2_qpair, 'peakcut_m1m2_qpair': peakcut_m1m2_qpair, 'bimodcut_m1m2_qpair': bimodcut_m1m2_qpair, 'o3a_powerpeak_m1m2_qpair': o3a_powerpeak_m1m2_qpair, 'o3a_powerbreak_m1m2_qpair': o3a_powerbreak_m1m2_qpair, 'o3a_powerpeak_m1_unif_m2': o3a_powerpeak_m1_unif_m2, 'unif_m1_unif_m2': unif_m1_unif_m2}
+
+pop_params = {'unif_mass': 'mmin,mmax', 'peak_mass': 'mu,sigma', 'bimod_mass': 'mu1,sigma1,mu2,sigma2,alpha', 'peakcut_mass': 'mu,sigma,mmin,mmax', 'bimodcut_mass': 'mu1,sigma1,mu2,sigma2,alpha,mmin,mmax', 'unif_m1m2': 'mmin,mmax', 'peak_m1m2': 'mu,sigma', 'bimod_m1m2': 'mu1,sigma1,mu2,sigma2,alpha', 'peakcut_m1m2': 'mu,sigma,mmin,mmax', 'bimodcut_m1m2': 'mu1,sigma1,mu2,sigma2,alpha,mmin,mmax', 'peakcut_m1_unif_m2': 'mu,sigma,mmin,mmax', 'bimodcut_m1_unif_m2': 'mu1,sigma1,mu2,sigma2,alpha,mmin,mmax', 'unif_m1m2_qpair': 'mmin,mmax,beta', 'peakcut_m1m2_qpair': 'mu,sigma,mmin,mmax,beta', 'bimodcut_m1m2_qpair': 'mu1,sigma1,mu2,sigma2,alpha,mmin,mmax,beta', 'o3a_powerpeak_m1m2_qpair': 'lpeak,alpha,beta,mmin,mmax,delta,mu,sigma', 'o3a_powerbreak_m1m2_qpair': 'alpha1,alpha2,beta,mmin,mmax,delta,b', 'o3a_powerpeak_m1_unif_m2': 'm1,m2,mu,sigma,mmin,mmax', 'unif_m1_unif_m2': 'm1,m2,mmin,mmax'}
 
 def get_pop_prior(key):
 
