@@ -258,7 +258,7 @@ def unif_m1_bimodcut_m2(m1,m2,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,alpha=0.
 	else:
 		norm1 = 0.5*(scipy.special.erf((mmax-mu1)/(np.sqrt(2)*sigma1))-scipy.special.erf((mmin-mu1)/(np.sqrt(2)*sigma1)))
 		norm2 = 0.5*(scipy.special.erf((mmax-mu2)/(np.sqrt(2)*sigma2))-scipy.special.erf((mmin-mu2)/(np.sqrt(2)*sigma2)))
-		val = (alpha*gaussian(m2,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m2,mu2,sigma2)/norm2)*unif_mass(m1,mmin,mmax)
+		val = (alpha*gaussian(m2,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m2,mu2,sigma2)/norm2)*unif_mass(m1,mmin_bh,mmax_bh)
 	
 	return val
 	
@@ -269,9 +269,9 @@ def unif_m1_bimodcut_m2_qpair(m1,m2,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,al
 		norm1 = 0.5*(scipy.special.erf((mmax-mu1)/(np.sqrt(2)*sigma1))-scipy.special.erf((mmin-mu1)/(np.sqrt(2)*sigma1)))
 		norm2 = 0.5*(scipy.special.erf((mmax-mu2)/(np.sqrt(2)*sigma2))-scipy.special.erf((mmin-mu2)/(np.sqrt(2)*sigma2)))
 		
-		norm = scipy.integrate.dblquad(lambda m1,m2 : (alpha*gaussian(m2,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m2,mu2,sigma2)/norm2)*unif_mass(m1,mmin,mmax)*(m2/m1)**beta, mmin_bh, mmax_bh, mmin, mmax)[0]
+		norm = scipy.integrate.dblquad(lambda m1,m2 : (alpha*gaussian(m2,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m2,mu2,sigma2)/norm2)*unif_mass(m1,mmin_bh,mmax_bh)*(m2/m1)**beta, mmin_bh, mmax_bh, mmin, mmax)[0]
 		
-		val = (alpha*gaussian(m2,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m2,mu2,sigma2)/norm2)*unif_mass(m1,mmin,mmax)*(m2/m1)**beta/norm
+		val = (alpha*gaussian(m2,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m2,mu2,sigma2)/norm2)*unif_mass(m1,mmin_bh,mmax_bh)*(m2/m1)**beta/norm
 	
 	return val
 	
