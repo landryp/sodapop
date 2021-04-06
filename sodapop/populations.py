@@ -258,6 +258,42 @@ def unif_m1_unif_m2_qpair(m1,m2,mmin=1.,mmax=3.,beta=2.,mmin_bh=3.,mmax_bh=23.):
     
 	return val
 	
+# FIXME: NEED TO FILL IN MODELS BELOW
+	
+def unif_m1_peakcut_m2(m1,m2,mmin=1.,mmax=3.,mmin_bh=3.,mmax_bh=23.): # uniform distribution in source frame masses, subject to m1 >= m2 convention
+
+	if m1 < m2 or m2 > mmax or m2 < mmin or m1 < mmin_bh or m1 > mmax_bh: val = 0.
+	else: val = 1./((mmax-mmin)*(mmax_bh-mmin_bh))
+    
+	return val
+	
+def unif_m1_peakcut_m2_qpair(m1,m2,mmin=1.,mmax=3.,beta=2.,mmin_bh=3.,mmax_bh=23.): # uniform distribution in source frame masses, subject to m1 >= m2 convention
+
+	if m1 < m2 or m2 > mmax or m2 < mmin or m1 < mmin_bh or m1 > mmax_bh: val = 0.
+	else:
+		norm = -(mmax_bh*mmin_bh)**(-beta)*(mmax**(beta+1)-mmin**(beta+1))*(mmax_bh*mmin_bh**beta-mmin_bh*mmax_bh**beta)/(beta**2-1.)
+		val = (m2/m1)**beta/norm
+    
+	return val
+	
+def unif_m1_bimodcut_m2(m1,m2,mmin=1.,mmax=3.,mmin_bh=3.,mmax_bh=23.): # uniform distribution in source frame masses, subject to m1 >= m2 convention
+
+	if m1 < m2 or m2 > mmax or m2 < mmin or m1 < mmin_bh or m1 > mmax_bh: val = 0.
+	else: val = 1./((mmax-mmin)*(mmax_bh-mmin_bh))
+    
+	return val
+	
+def unif_m1_bimodcut_m2_qpair(m1,m2,mmin=1.,mmax=3.,beta=2.,mmin_bh=3.,mmax_bh=23.): # uniform distribution in source frame masses, subject to m1 >= m2 convention
+
+	if m1 < m2 or m2 > mmax or m2 < mmin or m1 < mmin_bh or m1 > mmax_bh: val = 0.
+	else:
+		norm = -(mmax_bh*mmin_bh)**(-beta)*(mmax**(beta+1)-mmin**(beta+1))*(mmax_bh*mmin_bh**beta-mmin_bh*mmax_bh**beta)/(beta**2-1.)
+		val = (m2/m1)**beta/norm
+    
+	return val
+	
+# FIXME: NEED TO FILL IN MODELS ABOVE
+	
 # LOOKUP FUNCTIONS
 
 pop_priors = {'unif_mass': unif_mass, 'peak_mass': peak_mass, 'bimod_mass': bimod_mass, 'peakcut_mass': peakcut_mass, 'bimodcut_mass': bimodcut_mass, 'unif_m1m2': unif_m1m2, 'peak_m1m2': peak_m1m2, 'bimod_m1m2': bimod_m1m2, 'peakcut_m1m2': peakcut_m1m2, 'bimodcut_m1m2': bimodcut_m1m2, 'peakcut_m1_unif_m2': peakcut_m1_unif_m2, 'bimodcut_m1_unif_m2': bimodcut_m1_unif_m2, 'unif_m1m2_qpair': unif_m1m2_qpair, 'peakcut_m1m2_qpair': peakcut_m1m2_qpair, 'bimodcut_m1m2_qpair': bimodcut_m1m2_qpair, 'o3a_powerpeak_m1m2_qpair': o3a_powerpeak_m1m2_qpair, 'o3a_powerbreak_m1m2_qpair': o3a_powerbreak_m1m2_qpair, 'o3a_powerpeak_m1_unif_m2': o3a_powerpeak_m1_unif_m2, 'unif_m1_unif_m2': unif_m1_unif_m2}
