@@ -68,14 +68,10 @@ def peak_mass(m,mu=1.34,sigma=0.02): # gaussian mass distribution
 
 	return val
 	
-def bimod_mass(m,mu1=1.34,sigma1=0.02,mu2=1.47,sigma2=0.15,alpha=0.68,norms=False): # double Gaussian fit to Galactic double neutron star population from Farrow+ arXiv:1902.03300
+def bimod_mass(m,mu1=1.34,sigma1=0.02,mu2=1.47,sigma2=0.15,alpha=0.68): # double Gaussian fit to Galactic double neutron star population from Farrow+ arXiv:1902.03300
 	
-	if norms:
-		norm1 = 0.5*(scipy.special.erf(mu1/(np.sqrt(2)*sigma1))+1.)
-		norm2 = 0.5*(scipy.special.erf(mu2/(np.sqrt(2)*sigma2))+1.)
-	else:
-		norm1 = 1.
-		norm2 = 1.
+	norm1 = 1.
+	norm2 = 1.
 	val = alpha*gaussian(m,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m,mu2,sigma2)/norm2
 
 	return val
@@ -89,16 +85,12 @@ def peakcut_mass(m,mu=1.34,sigma=0.02,mmin=1.,mmax=3.): # gaussian mass distribu
 	
 	return val
 	
-def bimodcut_mass(m,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,alpha=0.65,mmin=0.9,mmax=2.12,norms=True): # double gaussian mass distribution with high- and low-mass cutoffs from Alsing+
+def bimodcut_mass(m,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,alpha=0.65,mmin=0.9,mmax=2.12): # double gaussian mass distribution with high- and low-mass cutoffs from Alsing+
 
 	if m > mmax or m < mmin: val = 0.
 	else:
-		if norms:
-			norm1 = 0.5*(scipy.special.erf((mmax-mu1)/(np.sqrt(2)*sigma1))-scipy.special.erf((mmin-mu1)/(np.sqrt(2)*sigma1)))
-			norm2 = 0.5*(scipy.special.erf((mmax-mu2)/(np.sqrt(2)*sigma2))-scipy.special.erf((mmin-mu2)/(np.sqrt(2)*sigma2)))
-		else:
-			norm1 = 1.
-			norm2 = 1.
+		norm1 = 0.5*(scipy.special.erf((mmax-mu1)/(np.sqrt(2)*sigma1))-scipy.special.erf((mmin-mu1)/(np.sqrt(2)*sigma1)))
+		norm2 = 0.5*(scipy.special.erf((mmax-mu2)/(np.sqrt(2)*sigma2))-scipy.special.erf((mmin-mu2)/(np.sqrt(2)*sigma2)))
 		val = alpha*gaussian(m,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m,mu2,sigma2)/norm2
 	
 	return val
@@ -119,16 +111,12 @@ def peak_m1m2(m1,m2,mu=1.34,sigma=0.02): # gaussian distribution in source frame
 	
 	return val
 	
-def bimod_m1m2(m1,m2,mu1=1.34,sigma1=0.02,mu2=1.47,sigma2=0.15,alpha=0.68,norms=False): # double gaussian distribution in source frame masses, subject to m1 >= m2 convention
+def bimod_m1m2(m1,m2,mu1=1.34,sigma1=0.02,mu2=1.47,sigma2=0.15,alpha=0.68): # double gaussian distribution in source frame masses, subject to m1 >= m2 convention
 
 	if m1 < m2: val = 0.
 	else:
-		if norms:
-			norm1 = 0.5*(scipy.special.erf(mu1/(np.sqrt(2)*sigma1))+1.)
-			norm2 = 0.5*(scipy.special.erf(mu2/(np.sqrt(2)*sigma2))+1.)
-		else:
-			norm1 = 1.
-			norm2 = 1.
+		norm1 = 1.
+		norm2 = 1.
 		val = (alpha*gaussian(m1,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m1,mu2,sigma2)/norm2)*(alpha*gaussian(m2,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m2,mu2,sigma2)/norm2)
 	
 	return val
@@ -142,16 +130,12 @@ def peakcut_m1m2(m1,m2,mu=1.34,sigma=0.02,mmin=1.,mmax=3.): # gaussian distribut
 	
 	return val
 	
-def bimodcut_m1m2(m1,m2,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,alpha=0.65,mmin=0.9,mmax=2.12,norms=True): # double gaussian mass distribution with high- and low-mass cutoffs from Alsing+
+def bimodcut_m1m2(m1,m2,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,alpha=0.65,mmin=0.9,mmax=2.12): # double gaussian mass distribution with high- and low-mass cutoffs from Alsing+
 
 	if m1 < m2 or m1 > mmax or m2 < mmin: val = 0.
 	else:
-		if norms:
-			norm1 = 0.5*(scipy.special.erf((mmax-mu1)/(np.sqrt(2)*sigma1))-scipy.special.erf((mmin-mu1)/(np.sqrt(2)*sigma1)))
-			norm2 = 0.5*(scipy.special.erf((mmax-mu2)/(np.sqrt(2)*sigma2))-scipy.special.erf((mmin-mu2)/(np.sqrt(2)*sigma2)))
-		else:
-			norm1 = 1.
-			norm2 = 1.
+		norm1 = 0.5*(scipy.special.erf((mmax-mu1)/(np.sqrt(2)*sigma1))-scipy.special.erf((mmin-mu1)/(np.sqrt(2)*sigma1)))
+		norm2 = 0.5*(scipy.special.erf((mmax-mu2)/(np.sqrt(2)*sigma2))-scipy.special.erf((mmin-mu2)/(np.sqrt(2)*sigma2)))
 		val = (alpha*gaussian(m1,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m1,mu2,sigma2)/norm2)*(alpha*gaussian(m2,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m2,mu2,sigma2)/norm2)
 	
 	return val
@@ -165,16 +149,12 @@ def peakcut_m1_unif_m2(m1,m2,mu=1.34,sigma=0.02,mmin=1.,mmax=3.): # gaussian dis
 	
 	return val
 	
-def bimodcut_m1_unif_m2(m1,m2,mu1=1.34,sigma1=0.02,mu2=1.47,sigma2=0.15,alpha=0.68,mmin=1.,mmax=3.,norms=False): # double gaussian mass distribution with high- and low-mass cutoffs
+def bimodcut_m1_unif_m2(m1,m2,mu1=1.34,sigma1=0.02,mu2=1.47,sigma2=0.15,alpha=0.68,mmin=1.,mmax=3.): # double gaussian mass distribution with high- and low-mass cutoffs
 
 	if m1 < m2 or m1 > mmax or m2 < mmin: val = 0.
 	else:
-		if norms:
-			norm1 = 0.5*(scipy.special.erf(mu1/(np.sqrt(2)*sigma1))+1.)
-			norm2 = 0.5*(scipy.special.erf(mu2/(np.sqrt(2)*sigma2))+1.)
-		else:
-			norm1 = 1.
-			norm2 = 1.
+		norm1 = 0.5*(scipy.special.erf((mmax-mu1)/(np.sqrt(2)*sigma1))-scipy.special.erf((mmin-mu1)/(np.sqrt(2)*sigma1)))
+		norm2 = 0.5*(scipy.special.erf((mmax-mu2)/(np.sqrt(2)*sigma2))-scipy.special.erf((mmin-mu2)/(np.sqrt(2)*sigma2)))
 		val = (alpha*gaussian(m1,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m1,mu2,sigma2)/norm2)*unif_mass(m2,mmin,mmax)
 	
 	return val
@@ -197,16 +177,12 @@ def peakcut_m1m2_qpair(m1,m2,mu=1.34,sigma=0.02,mmin=1.,mmax=3.,beta=0.): # gaus
 	
 	return val
 	
-def bimodcut_m1m2_qpair(m1,m2,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,alpha=0.65,mmin=0.9,mmax=2.12,beta=0.,norms=True): # double gaussian Alsing+ distribution in source frame masses, subject to m1 >= m2 convention and q-dependent pairing
+def bimodcut_m1m2_qpair(m1,m2,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,alpha=0.65,mmin=0.9,mmax=2.12,beta=0.): # double gaussian Alsing+ distribution in source frame masses, subject to m1 >= m2 convention and q-dependent pairing
 
 	if m1 < m2 or m1 > mmax or m2 < mmin: val = 0.
 	else:
-		if norms:
-			norm1 = 0.5*(scipy.special.erf((mmax-mu1)/(np.sqrt(2)*sigma1))-scipy.special.erf((mmin-mu1)/(np.sqrt(2)*sigma1)))
-			norm2 = 0.5*(scipy.special.erf((mmax-mu2)/(np.sqrt(2)*sigma2))-scipy.special.erf((mmin-mu2)/(np.sqrt(2)*sigma2)))
-		else:
-			norm1 = 1.
-			norm2 = 1.
+		norm1 = 0.5*(scipy.special.erf((mmax-mu1)/(np.sqrt(2)*sigma1))-scipy.special.erf((mmin-mu1)/(np.sqrt(2)*sigma1)))
+		norm2 = 0.5*(scipy.special.erf((mmax-mu2)/(np.sqrt(2)*sigma2))-scipy.special.erf((mmin-mu2)/(np.sqrt(2)*sigma2)))
 			
 		norm = scipy.integrate.dblquad(lambda m1,m2 : (alpha*gaussian(m1,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m1,mu2,sigma2)/norm2)*(alpha*gaussian(m2,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m2,mu2,sigma2)/norm2)*(m2/m1)**beta, mmin, mmax, mmin, mmax)[0]
 			
@@ -258,41 +234,46 @@ def unif_m1_unif_m2_qpair(m1,m2,mmin=1.,mmax=3.,beta=2.,mmin_bh=3.,mmax_bh=23.):
     
 	return val
 	
-# FIXME: NEED TO FILL IN MODELS BELOW
-	
 def unif_m1_peakcut_m2(m1,m2,mmin=1.,mmax=3.,mmin_bh=3.,mmax_bh=23.): # uniform distribution in source frame masses, subject to m1 >= m2 convention
 
 	if m1 < m2 or m2 > mmax or m2 < mmin or m1 < mmin_bh or m1 > mmax_bh: val = 0.
-	else: val = 1./((mmax-mmin)*(mmax_bh-mmin_bh))
-    
+	else:
+		norm = 0.5*(scipy.special.erf((mmax-mu)/(np.sqrt(2)*sigma))-scipy.special.erf((mmin-mu)/(np.sqrt(2)*sigma)))
+		val = gaussian(m2,mu,sigma)/norm*unif_mass(m1,mmin_bh,mmax_bh)
+	
 	return val
 	
 def unif_m1_peakcut_m2_qpair(m1,m2,mmin=1.,mmax=3.,beta=2.,mmin_bh=3.,mmax_bh=23.): # uniform distribution in source frame masses, subject to m1 >= m2 convention
 
 	if m1 < m2 or m2 > mmax or m2 < mmin or m1 < mmin_bh or m1 > mmax_bh: val = 0.
 	else:
-		norm = -(mmax_bh*mmin_bh)**(-beta)*(mmax**(beta+1)-mmin**(beta+1))*(mmax_bh*mmin_bh**beta-mmin_bh*mmax_bh**beta)/(beta**2-1.)
-		val = (m2/m1)**beta/norm
-    
+		norm = scipy.integrate.dblquad(lambda m1,m2 : gaussian(m2,mu,sigma)*unif_mass(m1,mmin_bh,mmax_bh)*(m2/m1)**beta, mmin_bh, mmax_bh, mmin, mmax)[0]
+		val = gaussian(m2,mu,sigma)*unif_mass(m1,mmin_bh,mmax_bh)*(m2/m1)**beta/norm
+	
 	return val
 	
 def unif_m1_bimodcut_m2(m1,m2,mmin=1.,mmax=3.,mmin_bh=3.,mmax_bh=23.): # uniform distribution in source frame masses, subject to m1 >= m2 convention
 
 	if m1 < m2 or m2 > mmax or m2 < mmin or m1 < mmin_bh or m1 > mmax_bh: val = 0.
-	else: val = 1./((mmax-mmin)*(mmax_bh-mmin_bh))
-    
+	else:
+		norm1 = 0.5*(scipy.special.erf((mmax-mu1)/(np.sqrt(2)*sigma1))-scipy.special.erf((mmin-mu1)/(np.sqrt(2)*sigma1)))
+		norm2 = 0.5*(scipy.special.erf((mmax-mu2)/(np.sqrt(2)*sigma2))-scipy.special.erf((mmin-mu2)/(np.sqrt(2)*sigma2)))
+		val = (alpha*gaussian(m2,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m2,mu2,sigma2)/norm2)*unif_mass(m1,mmin,mmax)
+	
 	return val
 	
 def unif_m1_bimodcut_m2_qpair(m1,m2,mmin=1.,mmax=3.,beta=2.,mmin_bh=3.,mmax_bh=23.): # uniform distribution in source frame masses, subject to m1 >= m2 convention
 
 	if m1 < m2 or m2 > mmax or m2 < mmin or m1 < mmin_bh or m1 > mmax_bh: val = 0.
 	else:
-		norm = -(mmax_bh*mmin_bh)**(-beta)*(mmax**(beta+1)-mmin**(beta+1))*(mmax_bh*mmin_bh**beta-mmin_bh*mmax_bh**beta)/(beta**2-1.)
-		val = (m2/m1)**beta/norm
-    
-	return val
+		norm1 = 0.5*(scipy.special.erf((mmax-mu1)/(np.sqrt(2)*sigma1))-scipy.special.erf((mmin-mu1)/(np.sqrt(2)*sigma1)))
+		norm2 = 0.5*(scipy.special.erf((mmax-mu2)/(np.sqrt(2)*sigma2))-scipy.special.erf((mmin-mu2)/(np.sqrt(2)*sigma2)))
+		
+		norm = scipy.integrate.dblquad(lambda m1,m2 : (alpha*gaussian(m2,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m2,mu2,sigma2)/norm2)*unif_mass(m1,mmin,mmax)*(m2/m1)**beta, mmin_bh, mmax_bh, mmin, mmax)[0]
+		
+		val = (alpha*gaussian(m2,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m2,mu2,sigma2)/norm2)*unif_mass(m1,mmin,mmax)*(m2/m1)**beta/norm
 	
-# FIXME: NEED TO FILL IN MODELS ABOVE
+	return val
 	
 # LOOKUP FUNCTIONS
 
