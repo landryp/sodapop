@@ -17,6 +17,7 @@ parser.add_argument('likedata', nargs='+')
 parser.add_argument('-d', '--delim', help='delimiter for data file, DEFAULT=","', default=',')
 parser.add_argument('-c', '--cols', help='name of mass1, mass2 and likelihood data columns to use, DEFAULT="m1 m2 likelihood"', default=['m1','m2','likelihood'], nargs='+')
 parser.add_argument('-p', '--popmodel', help='name of population model, DEFAULT="doublegaussian_m1m2"', default="doublegaussian_m1m2", type=str)
+parser.add_argument('-s', '--select', help='name of selection function, DEFAULT=False', default=False)
 parser.add_argument('-o', '--outpath', help='path for output population parameter samples, DEFAULT=AUTO', default=False)
 parser.add_argument('-v', '--verbose', action='store_true', default=False)
 args = parser.parse_args()
@@ -24,13 +25,20 @@ args = parser.parse_args()
 if args.outpath: out_path = args.outpath
 else: out_path = os.path.dirname(args.likedata[0])+'/'+args.popmodel+'.csv'
 
+NUM_PRIOR_SAMPS = 1e4
+PRIOR_M_UPPER = 100.
+PRIOR_DL_UPPER = 1000.
+
 num_masses = len(args.cols)-1
 
 # get population model
 
-pop_like = pop.get_pop_prior(args.popmodel)
+pop_prob = pop.get_pop_prior(args.popmodel)
 
-# load posterior samples
+if args.select: select_func = pop.get_select_func(args.select)
+else: select_func = lambda *x : 1.
+
+# load likelihood samples
 
 likesamps = []
 for likedata in args.likedata:
@@ -50,6 +58,16 @@ for likedata in args.likedata:
 		samps = list(zip(ms,wts))
 	
 	likesamps.append(samps)
+
+# load same number of uniform samples
+
+numsamps = int(NUM_PRIOR_SAMPS)
+unif_m_samps1 = np.random.choice(np.arange(0.,PRIOR_M_UPPER,0.1),numsamps)
+unif_m_samps2 = np.random.choice(np.arange(0.,PRIOR_M_UPPER,0.1),numsamps)
+unif_dl_samps = np.random.choice(np.arange(0.,PRIOR_DL_UPPER,1.),numsamps)
+
+if num_masses == 2: unif_samps = [[max(m1,m2),min(m1,m2),dl] for m1,m2,dl in zip(unif_m_samps1,unif_m_samps2,unif_dl_samps)]
+else: unif_samps = unif_m_samps1
 		
 # calculate population parameter posterior
 
@@ -61,9 +79,14 @@ for i,params in enumerate(pop_params):
 	if args.verbose: print('Evaluating probability of population model {0}...'.format(i))
 
 	if num_masses == 2:
-		likes = [np.sum([wt*pop_like(m1,m2,*params) for m1,m2,wt in samps]) for samps in likesamps]
+		denoms = [np.sum([select_func(m1,m2,dl)*pop_prob(m1,m2,*params) for m1,m2,dl in unif_samps])/numsamps for samps in likesamps]
+		likes = [np.sum([wt*pop_prob(m1,m2,*params) for m1,m2,wt in samps])/len(samps) for samps in likesamps]
 	else:
-		likes = [np.sum([wt*pop_like(m,*params) for m,wt in samps]) for samps in likesamps]
+		denoms = [np.sum([select_func(m)*pop_prob(m,*params) for m in unif_samps])/numsamps for samps in likesamps]
+		likes = [np.sum([wt*pop_prob(m,*params) for m,wt in samps]) for samps in likesamps]
+		
+	likes = [like/denom for like,denom in zip(likes,denoms)]
+	
 	params_post = np.prod(likes)
 	posts.append([params_post])
 
