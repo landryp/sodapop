@@ -274,6 +274,18 @@ def unif_m1_bimodcut_m2_qpair(m1,m2,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,al
 		val = (alpha*gaussian(m2,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m2,mu2,sigma2)/norm2)*unif_mass(m1,mmin_bh,mmax_bh)*(m2/m1)**beta/norm
 	
 	return val # FIXME: normalize me numerically
+
+# GALACTIC BNS POPULATION PROPAGATED TO GW POPULATION WITH SNR SELECTION EFFECT
+
+def bimodcut_m1m2_snrcut(m1,m2,dl,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,alpha=0.65,mmin=0.9,mmax=2.12,snr0=8.,r0=176.): # double gaussian mass distribution with high- and low-mass cutoffs from Alsing+
+
+	if m1 < m2 or m1 > mmax or m2 < mmin: val = 0.
+	else:
+		norm1 = 0.5*(scipy.special.erf((mmax-mu1)/(np.sqrt(2)*sigma1))-scipy.special.erf((mmin-mu1)/(np.sqrt(2)*sigma1)))
+		norm2 = 0.5*(scipy.special.erf((mmax-mu2)/(np.sqrt(2)*sigma2))-scipy.special.erf((mmin-mu2)/(np.sqrt(2)*sigma2)))
+		val = 2.*(alpha*gaussian(m1,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m1,mu2,sigma2)/norm2)*(alpha*gaussian(m2,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m2,mu2,sigma2)/norm2)
+	
+	return val*snrcut(m1,m2,dl,snr0,r0)
 	
 # LOOKUP FUNCTIONS
 
