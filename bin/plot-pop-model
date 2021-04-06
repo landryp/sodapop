@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-'QPLOT-POP-MODEL -- plot quantiles for population model'
-__usage__ = 'qplot-pop-model pop_model.csv [-p popmodel -o /path/to/plot.png -v]'
+'PLOT-POP-MODEL -- plot quantiles for population model'
+__usage__ = 'plot-pop-model pop_model.csv [-p popmodel -o /path/to/plot.png -v]'
 __author__ = 'Philippe Landry (pgjlandry@gmail.com)'
 __date__ = '02-2021'
 
