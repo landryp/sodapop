@@ -23,7 +23,7 @@ parser.add_argument('-v', '--verbose', action='store_true', default=False)
 args = parser.parse_args()
 
 if args.outpath: out_path = args.outpath
-else: out_path = os.path.dirname(args.likedata[0])+'/'+args.popmodel+'.csv'
+else: out_path = os.path.dirname(args.likedata[0])+'/'+args.popmodel[0]+'.csv'
 
 NUM_PRIOR_SAMPS = 1e4
 PRIOR_M_UPPER = 100.
@@ -77,16 +77,14 @@ pop_params = np.genfromtxt(args.popparams, names=None, dtype=None, delimiter=arg
 posts = []
 for i,params in enumerate(pop_params):
 
-	pop_prob = pop_probs[i]
-
 	if args.verbose: print('Evaluating probability of population model {0}...'.format(i))
 
 	if num_masses == 2:
-		denoms = [np.sum([select_func(m1,m2,dl)*pop_prob(m1,m2,*params) for m1,m2,dl in unif_samps])/numsamps for samps in likesamps]
-		likes = [np.sum([wt*pop_prob(m1,m2,*params) for m1,m2,wt in samps])/len(samps) for samps in likesamps]
+		denoms = [np.sum([select_func(m1,m2,dl)*pop_probs[j](m1,m2,*params) for m1,m2,dl in unif_samps])/numsamps for j,samps in enumerate(likesamps)]
+		likes = [np.sum([wt*pop_probs[j](m1,m2,*params) for m1,m2,wt in samps])/len(samps) for j,samps in enumerate(likesamps)]
 	else:
-		denoms = [np.sum([select_func(m)*pop_prob(m,*params) for m in unif_samps])/numsamps for samps in likesamps]
-		likes = [np.sum([wt*pop_prob(m,*params) for m,wt in samps]) for samps in likesamps]
+		denoms = [np.sum([select_func(m)*pop_probs[j](m,*params) for m in unif_samps])/numsamps for j,samps in enumerate(likesamps)]
+		likes = [np.sum([wt*pop_probs[j](m,*params) for m,wt in samps]) for j,samps in enumerate(likesamps)]
 		
 	likes = [like/denom for like,denom in zip(likes,denoms)]
 	

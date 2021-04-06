@@ -216,7 +216,7 @@ def bimodcut_m1m2_qpair(m1,m2,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,alpha=0.
 	
 def o3a_powerpeak_m1m2_qpair(m1,m2,lpeak=0.10,alpha=2.62,beta=1.26,mmin=4.53,mmax=86.73,delta=4.88,mu=33.49,sigma=5.09): # power law + peak mass model from O3a populations paper
     
-    	norm = 0.5*(scipy.special.erf((mmax-mu)/(np.sqrt(2)*sigma))-scipy.special.erf((mmin-mu)/(np.sqrt(2)*sigma)))
+	norm = 0.5*(scipy.special.erf((mmax-mu)/(np.sqrt(2)*sigma))-scipy.special.erf((mmin-mu)/(np.sqrt(2)*sigma)))
 	val = ((1.-lpeak)*powerlaw(m1,-alpha,mmin,mmax)+lpeak*gaussian(m1,mu,sigma)/norm)*smooth(m1,mmin,delta)*(m2/m1)**beta*smooth(m2,mmin,delta)/m1
     
 	return val # FIXME: normalize me!
