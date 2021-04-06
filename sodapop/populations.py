@@ -144,8 +144,8 @@ def peakcut_m1_unif_m2(m1,m2,mu=1.34,sigma=0.02,mmin=1.,mmax=3.): # gaussian dis
 
 	if m1 < m2 or m1 > mmax or m2 < mmin: val = 0.
 	else:
-		norm = 0.5*(scipy.special.erf((mmax-mu)/(np.sqrt(2)*sigma))-scipy.special.erf((mmin-mu)/(np.sqrt(2)*sigma)))
-		val = 2.*gaussian(m1,mu,sigma)*unif_mass(m2,mmin,mmax)/norm
+		norm = np.exp(-(mmax**2+mmin**2+mu**2)/(2.*sigma**2))*(np.exp((mmax**2+2.*mmin*mu)/(2.*sigma**2))-np.exp((mmin**2+2.*mmax*mu)/(2.*sigma**2)))*sigma/np.sqrt(2*np.pi)-0.5*(mmin-mu)*(scipy.special.erf((mmax-mu)/(np.sqrt(2)*sigma))-scipy.special.erf((mmin-mu)/(np.sqrt(2)*sigma)))
+		val = (mmax-mmin)*gaussian(m1,mu,sigma)*unif_mass(m2,mmin,mmax)/norm
 	
 	return val
 	
@@ -155,16 +155,16 @@ def bimodcut_m1_unif_m2(m1,m2,mu1=1.34,sigma1=0.02,mu2=1.47,sigma2=0.15,alpha=0.
 	else:
 		norm1 = 0.5*(scipy.special.erf((mmax-mu1)/(np.sqrt(2)*sigma1))-scipy.special.erf((mmin-mu1)/(np.sqrt(2)*sigma1)))
 		norm2 = 0.5*(scipy.special.erf((mmax-mu2)/(np.sqrt(2)*sigma2))-scipy.special.erf((mmin-mu2)/(np.sqrt(2)*sigma2)))
-		val = 2.*(alpha*gaussian(m1,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m1,mu2,sigma2)/norm2)*unif_mass(m2,mmin,mmax)
+		val = (alpha*gaussian(m1,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m1,mu2,sigma2)/norm2)*unif_mass(m2,mmin,mmax)
 	
-	return val
+	return val # FIXME: fix my normalization to account for m1 > m2
 	
 def unif_m1m2_qpair(m1,m2,mmin=5.,mmax=2e2,beta=0.): # uniform distribution in source frame masses, subject to m1 >= m2 convention and q-dependent pairing
 
 	if m1 < m2 or m1 > mmax or m2 < mmin: val = 0.
 	else:
-		norm = (mmax*mmin)**beta*(mmin**(beta+1)-mmax**(beta+1))*(mmax*mmin**beta-mmin*mmax**beta)/(beta**2-1.)
-		val = (m2/m1)**beta/norm
+		norm = (2.*mmax*mmin*(mmin/mmax)**beta+mmax**2*(beta-1)-mmin**2*(beta+1))/(beta**2-1.)
+		val = 2.*(m2/m1)**beta/norm
     
 	return val
 	
@@ -175,7 +175,7 @@ def peakcut_m1m2_qpair(m1,m2,mu=1.34,sigma=0.02,mmin=1.,mmax=3.,beta=0.): # gaus
 		norm = scipy.integrate.dblquad(lambda m1,m2 : gaussian(m1,mu,sigma)*gaussian(m2,mu,sigma)*(m2/m1)**beta, mmin, mmax, mmin, mmax)[0]
 		val = 2.*gaussian(m1,mu,sigma)*gaussian(m2,mu,sigma)*(m2/m1)**beta/norm
 	
-	return val
+	return val # FIXME: normalize me numerically
 	
 def bimodcut_m1m2_qpair(m1,m2,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,alpha=0.65,mmin=0.9,mmax=2.12,beta=0.): # double gaussian Alsing+ distribution in source frame masses, subject to m1 >= m2 convention and q-dependent pairing
 
@@ -188,7 +188,7 @@ def bimodcut_m1m2_qpair(m1,m2,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,alpha=0.
 			
 		val = 2.*(alpha*gaussian(m1,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m1,mu2,sigma2)/norm2)*(alpha*gaussian(m2,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m2,mu2,sigma2)/norm2)*(m2/m1)**beta/norm
 	
-	return val
+	return val # FIXME: normalize me numerically
 	
 def o3a_powerpeak_m1m2_qpair(m1,m2,lpeak=0.10,alpha=2.62,beta=1.26,mmin=4.53,mmax=86.73,delta=4.88,mu=33.49,sigma=5.09): # power law + peak mass model from O3a populations paper
     
@@ -212,9 +212,9 @@ def o3a_powerpeak_m1_unif_m2(m1,m2,mu=1.34,sigma=0.02,mmin=1.,mmax=3.):
 	if m1 < m2 or m2 > mmax or m2 < mmin: val = 0.
 	else:
 		norm = 0.5*(scipy.special.erf((mmax-mu)/(np.sqrt(2)*sigma))-scipy.special.erf((mmin-mu)/(np.sqrt(2)*sigma)))
-		val = 2.*((1.-lpeak)*powerlaw(m1,-alpha,mmin,mmax)+lpeak*gaussian(m1,mu,sigma)/norm)*smooth(m1,mmin,delta)*unif_mass(m2,mmin,mmax)
+		val = ((1.-lpeak)*powerlaw(m1,-alpha,mmin,mmax)+lpeak*gaussian(m1,mu,sigma)/norm)*smooth(m1,mmin,delta)*unif_mass(m2,mmin,mmax)
 	
-	return val
+	return val # FIXME: normalize me!
 	
 # NSBH MASS DISTRIBUTIONS
 
@@ -250,7 +250,7 @@ def unif_m1_peakcut_m2_qpair(m1,m2,mu=1.34,sigma=0.02,mmin=1.,mmax=3.,beta=2.,mm
 		norm = scipy.integrate.dblquad(lambda m1,m2 : gaussian(m2,mu,sigma)*unif_mass(m1,mmin_bh,mmax_bh)*(m2/m1)**beta, mmin_bh, mmax_bh, mmin, mmax)[0]
 		val = gaussian(m2,mu,sigma)*unif_mass(m1,mmin_bh,mmax_bh)*(m2/m1)**beta/norm
 	
-	return val
+	return val # FIXME: normalize me numerically
 	
 def unif_m1_bimodcut_m2(m1,m2,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,alpha=0.65,mmin=0.9,mmax=2.12,mmin_bh=3.,mmax_bh=23.): # uniform distribution in source frame masses, subject to m1 >= m2 convention
 
@@ -273,7 +273,7 @@ def unif_m1_bimodcut_m2_qpair(m1,m2,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,al
 		
 		val = (alpha*gaussian(m2,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m2,mu2,sigma2)/norm2)*unif_mass(m1,mmin_bh,mmax_bh)*(m2/m1)**beta/norm
 	
-	return val
+	return val # FIXME: normalize me numerically
 	
 # LOOKUP FUNCTIONS
 

@@ -26,7 +26,7 @@ if args.outpath: out_path = args.outpath
 else: out_path = os.path.dirname(args.likedata[0])+'/'+args.popmodel[0]+'.csv'
 
 NUM_PRIOR_SAMPS = 1e4
-PRIOR_M_UPPER = 100.
+PRIOR_M_UPPER = 23.
 PRIOR_DL_UPPER = 1000.
 
 num_masses = len(args.cols)-1
