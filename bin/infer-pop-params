@@ -96,4 +96,4 @@ for i,params in enumerate(pop_params):
 # save population parameters posterior
 pop_param_samps = np.append(np.array(pop_params),np.array(posts),axis=1)
 col_names = pop.get_pop_params(args.popmodel[0])+',weight' # COLUMN NAMES FOR OUTPUT
-np.savetxt(out_path,pop_param_samps[~np.isfinite(pop_param_samps)],header=col_names,comments='',delimiter=',')
+np.savetxt(out_path,pop_param_samps[np.isfinite(pop_param_samps).all(axis=1)],header=col_names,comments='',delimiter=',')
