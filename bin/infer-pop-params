@@ -19,17 +19,19 @@ parser.add_argument('-c', '--cols', help='name of mass1, mass2 and likelihood da
 parser.add_argument('-p', '--popmodel', help='name of population model, DEFAULT="doublegaussian_m1m2"', default="doublegaussian_m1m2", nargs='+')
 parser.add_argument('-s', '--select', help='name of selection function, DEFAULT=False', default=False)
 parser.add_argument('-o', '--outpath', help='path for output population parameter samples, DEFAULT=AUTO', default=False)
+parser.add_argument('-m', '--maxsamps', help='maximum number of likelihood samples to use, DEFAULT=5e3', default=5e3)
 parser.add_argument('-v', '--verbose', action='store_true', default=False)
 args = parser.parse_args()
 
 if args.outpath: out_path = args.outpath
 else: out_path = os.path.dirname(args.likedata[0])+'/'+args.popmodel[0]+'.csv'
 
-NUM_PRIOR_SAMPS = 1e4
+NUM_PRIOR_SAMPS = 5e3
 PRIOR_M_UPPER = 23.
 PRIOR_DL_UPPER = 1000.
 
 num_masses = len(args.cols)-1
+num_like_samps = int(args.maxsamps)
 
 # get population model
 
@@ -55,10 +57,11 @@ for likedata in args.likedata:
 	if num_masses == 2:
 		m1s = data[args.cols[0]] # COLUMN NAMES FOR INPUT
 		m2s = data[args.cols[1]]
-		samps = list(zip(m1s,m2s,wts))
+		samps = np.random.choice(zip(m1s,m2s),num_like_samps,replace=True,p=wts)
+
 	else:	
 		ms = data[args.cols[0]]
-		samps = list(zip(ms,wts))
+		samps = np.random.choice(ms,num_like_samps,replace=True,p=wts)
 	
 	likesamps.append(samps)
 
@@ -83,10 +86,10 @@ for i,params in enumerate(pop_params):
 
 	if num_masses == 2:
 		denoms = [np.sum([select_func(m1,m2,dl)*pop_probs[j](m1,m2,*params) for m1,m2,dl in unif_samps])/numsamps for j,samps in enumerate(likesamps)]
-		likes = [np.sum([wt*pop_probs[j](m1,m2,*params) for m1,m2,wt in samps])/len(samps) for j,samps in enumerate(likesamps)]
+		likes = [np.sum([pop_probs[j](m1,m2,*params) for m1,m2 in samps])/len(samps) for j,samps in enumerate(likesamps)]
 	else:
 		denoms = [np.sum([select_func(m)*pop_probs[j](m,*params) for m in unif_samps])/numsamps for j,samps in enumerate(likesamps)]
-		likes = [np.sum([wt*pop_probs[j](m,*params) for m,wt in samps]) for j,samps in enumerate(likesamps)]
+		likes = [np.sum([pop_probs[j](m,*params) for m in samps]) for j,samps in enumerate(likesamps)]
 		
 	likes = [like/denom for like,denom in zip(likes,denoms)]
 	
