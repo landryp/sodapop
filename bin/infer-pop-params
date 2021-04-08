@@ -57,7 +57,8 @@ for likedata in args.likedata:
 	if num_masses == 2:
 		m1s = data[args.cols[0]] # COLUMN NAMES FOR INPUT
 		m2s = data[args.cols[1]]
-		samps = np.random.choice(zip(m1s,m2s),num_like_samps,replace=True,p=wts)
+		ids = np.random.choice(range(len(m1s)),num_like_samps,replace=True,p=wts)
+		samps = [(m1s[i],m2s[i]) for i in ids]
 
 	else:	
 		ms = data[args.cols[0]]
