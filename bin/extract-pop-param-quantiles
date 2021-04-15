@@ -67,7 +67,7 @@ postdat = np.genfromtxt(args.postdata,dtype=None,delimiter=",",names=True,encodi
 if args.weightcol:
 	if not args.logweights: wts = postdat[args.weightcol]
 	else: wts = np.exp(postdat[args.weightcol])
-else: wts = np.ones(len(samps))
+else: wts = np.ones(len(postdat[posdat.dtype.names[0]]))
 wts = wts/np.sum(wts)
 
 full_qs = []

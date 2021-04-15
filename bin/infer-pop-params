@@ -57,12 +57,12 @@ for likedata in args.likedata:
 	if num_masses == 2:
 		m1s = data[args.cols[0]] # COLUMN NAMES FOR INPUT
 		m2s = data[args.cols[1]]
-		ids = np.random.choice(range(len(m1s)),num_like_samps,replace=True,p=wts)
+		ids = np.random.choice(range(len(m1s)),num_like_samps,replace=True,p=wts/np.sum(wts))
 		samps = [(m1s[i],m2s[i]) for i in ids]
 
 	else:	
 		ms = data[args.cols[0]]
-		samps = np.random.choice(ms,num_like_samps,replace=True,p=wts)
+		samps = np.random.choice(ms,num_like_samps,replace=True,p=wts/np.sum(wts))
 	
 	likesamps.append(samps)
 
@@ -90,7 +90,7 @@ for i,params in enumerate(pop_params):
 		likes = [np.sum([pop_probs[j](m1,m2,*params) for m1,m2 in samps])/len(samps) for j,samps in enumerate(likesamps)]
 	else:
 		denoms = [np.sum([select_func(m)*pop_probs[j](m,*params) for m in unif_samps])/numsamps for j,samps in enumerate(likesamps)]
-		likes = [np.sum([pop_probs[j](m,*params) for m in samps]) for j,samps in enumerate(likesamps)]
+		likes = [np.sum([pop_probs[j](m,*params) for m in samps])/len(samps) for j,samps in enumerate(likesamps)]
 		
 	likes = [like/denom for like,denom in zip(likes,denoms)]
 	
