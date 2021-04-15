@@ -25,7 +25,7 @@ parser.add_argument('-o', '--outpath', help='path for output population paramete
 parser.add_argument('-m', '--mrange', help='mass range for plot, DEFAULT="0.5 3."', default=[0.5,3.])
 parser.add_argument('-n', '--nummods', help='number of population model realizations to use for computing confidence intervals, DEFAULT=10000', default=1e4, type=float)
 parser.add_argument('-b', '--binary', help='make separate m1 and m2 plots', action='store_false', default=True)
-parser.add_argument('-M', '--maxap', help='plot the maximum a posteriori instead of the median', action='store_true', default=False)
+parser.add_argument('-M', '--maxap', help='plot the maximum a posteriori instead of the median (give comma-separated MAP parameters)', default=False, type=str)
 parser.add_argument('-f', '--fairdraws', help='number of population model realizations to plot, DEFAULT=None', default=False, type=float)
 parser.add_argument('-q', '--quantiles', help='quantiles to plot, DEFAULT=None', default=False, type=float, nargs=3)
 parser.add_argument('-r', '--refdat', help='reference data for rugplot, e.g. /path/to/samples.csv,m, DEFAULT=None', default=False, nargs='+')
@@ -70,10 +70,11 @@ param_names = pop.get_pop_params(args.popmodel).split(',')
 params = np.column_stack([popdata[param_name] for param_name in param_names])
 wts = popdata[args.weightcol]
 wts = wts/np.sum(wts)
-maxap = np.max(wts)
+#maxap = np.max(wts)
 
-maxap_idx = np.where(wts == wts.max())[0][0]
-maxap_params = params[maxap_idx]
+#maxap_idx = np.where(wts == wts.max())[0][0]
+#maxap_params = params[maxap_idx]
+if args.maxap: maxap_params = [float(param_val) for param_val in str(args.maxap).split(',')]
 
 idxs = np.random.choice(len(wts),size=NUM_MODELS,replace=True,p=wts)
 params_out = [params[idx] for idx in idxs]
