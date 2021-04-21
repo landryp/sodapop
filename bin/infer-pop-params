@@ -243,6 +243,6 @@ if args.verbose: print("Effective samples per second: {0}".format(ess))
 # save population parameters posterior
 posts = np.ones((len(samples_emcee),1))
 pop_param_samps = np.append(np.array(samples_emcee),np.array(posts),axis=1)
-col_names = pop.get_pop_params(args.popmodel[0])+',weight' # COLUMN NAMES FOR OUTPUT
+col_names = pop.get_pop_params(args.popmodel[0])+',weight'
 np.savetxt(out_path,pop_param_samps[np.isfinite(pop_param_samps).all(axis=1)],header=col_names,comments='',delimiter=',')
 

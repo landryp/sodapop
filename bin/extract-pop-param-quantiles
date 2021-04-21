@@ -11,6 +11,8 @@ from argparse import ArgumentParser
 import numpy as np
 import os
 import numpy.random
+import scipy
+from scipy.stats import gaussian_kde
 
 # SET UP OPTIONS
 
@@ -67,11 +69,24 @@ postdat = np.genfromtxt(args.postdata,dtype=None,delimiter=",",names=True,encodi
 if args.weightcol:
 	if not args.logweights: wts = postdat[args.weightcol]
 	else: wts = np.exp(postdat[args.weightcol])
-else: wts = np.ones(len(postdat[posdat.dtype.names[0]]))
+else: wts = np.ones(len(postdat[postdat.dtype.names[0]]))
 wts = wts/np.sum(wts)
 
-full_qs = []
 cols_list = args.col
+
+kde = gaussian_kde(np.vstack([postdat[col] for col in cols_list]))
+uniform_samples = []
+for col in cols_list:
+	samps = postdat[col]
+	uniform_samps = np.random.uniform(np.min(samps),np.max(samps),int(args.numsamps))
+	uniform_samples.append(uniform_samps)
+kde_wts = kde(uniform_samples)
+idxs = np.random.choice(range(int(args.numsamps)),size=int(args.numsamps),replace=True,p=kde_wts/np.sum(kde_wts))
+mode = max(idxs, key = list(idxs).count)
+mode_params = [uniform_samps[mode] for uniform_samps in uniform_samples]
+print(mode_params)
+
+full_qs = []
 for col in cols_list:
 	samps = postdat[col]
 	samps_equal_wt = np.random.choice(samps,size=int(args.numsamps),p=wts)
