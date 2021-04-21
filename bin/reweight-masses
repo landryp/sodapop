@@ -32,9 +32,9 @@ new_prior = priors.get_binary_mass_prior(args.newprior)
 
 post_data = np.genfromtxt(args.data,names=True,dtype=None,delimiter=args.delim)
 cols = post_data.dtype.names
-if args.verbose: print(cols) # check column names; use source-frame masses and dimensionless spins
+if args.verbose: print(cols)
 
-m1s = post_data[args.cols[0]] # COLUMN NAMES FOR INPUT
+m1s = post_data[args.cols[0]]
 m2s = post_data[args.cols[1]]
 dLs = post_data[args.cols[2]]
 
@@ -57,5 +57,5 @@ new_post_weights = [post_weight*(new_prior_weight/old_prior_weight) for post_wei
 # save reweighted posterior
 
 new_post_samps = np.column_stack((np.array(m1s), np.array(m2s), np.array(dLs), np.array([1./wt for wt in old_prior_weights]), np.array(new_prior_weights), np.array(new_post_weights)))
-col_names = 'm1_source,m2_source,dL,likelihood,prior,posterior' # COLUMN NAMES FOR OUTPUT
+col_names = 'm1_source,m2_source,dL,likelihood,prior,posterior'
 np.savetxt(out_path,new_post_samps,header=col_names,comments='',delimiter=',')

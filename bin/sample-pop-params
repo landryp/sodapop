@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 'SAMPLE-POP-PARAMS -- sample population model parameters'
-__usage__ = 'sample-pop-params pop_model [-p prior1 prior2 ... -o /path/to/output.csv -v]'
+__usage__ = 'sample-pop-params pop_model [-p param_prior_shape,hypparam1,hypparam2 param_prior_shape,hypparam1,hypparam2 ... -o /path/to/output.csv -n 1e4 -v]'
 __author__ = 'Philippe Landry (pgjlandry@gmail.com)'
 __date__ = '02-2021'
 
@@ -15,13 +15,13 @@ parser = ArgumentParser(description=__doc__)
 parser.add_argument('popmodel',type=str)
 parser.add_argument('-d', '--delim', help='delimiter for data file, DEFAULT=","', default=',')
 parser.add_argument('-n', '--numsamps', help='number of samples to draw, DEFAULT=1000', default=1000, type=float)
-parser.add_argument('-p', '--priors', help='prior distribution and hyperparameters for each population parameter, DEFAULT="flat,-1.,1."', default="flat,-1.,1.", type=str, nargs='+')
+parser.add_argument('-p', '--priors', help='prior distribution and hyperparameters for each population parameter, DEFAULT="flat,0.,1."', default="flat,0.,1.", type=str, nargs='+')
 parser.add_argument('-o', '--outpath', help='path for output reweighted samples, DEFAULT=AUTO', default=False)
 parser.add_argument('-v', '--verbose', action='store_true', default=False)
 args = parser.parse_args()
 
 if args.outpath: out_path = args.outpath
-else: out_path = '{0}_params.csv'.format(args.popmodel)
+else: out_path = '{0}_prior.csv'.format(args.popmodel)
 
 num_samps = int(args.numsamps)
 
@@ -74,10 +74,9 @@ for i,param in enumerate(param_names):
 	elif param == 'mu1': samps_out.append(mu1s_out)
 	elif param == 'mu2': samps_out.append(mu2s_out)
 	else: samps_out.append(samps[i])
-	
 
 # save parameter samples
 
 param_samps = np.column_stack(samps_out)
-col_names = pop.get_pop_params(args.popmodel) # COLUMN NAMES FOR OUTPUT
+col_names = pop.get_pop_params(args.popmodel)
 np.savetxt(out_path,param_samps,header=col_names,comments='',delimiter=',')

@@ -25,9 +25,9 @@ else: out_path = os.path.dirname(args.data)+'/'+os.path.basename(args.data)
 
 post_data = np.genfromtxt(args.data,names=True,dtype=None,delimiter=args.delim)
 cols = post_data.dtype.names
-if args.verbose: print(cols) # check column names
+if args.verbose: print(cols)
 
-m1_col = args.cols[0] # COLUMN NAMES FOR INPUT
+m1_col = args.cols[0]
 m2_col = args.cols[1]
 
 samples1 = np.column_stack([post_data[col] for col in cols if col != m2_col])
@@ -35,7 +35,7 @@ samples2 = np.column_stack([post_data[col] for col in cols if col != m1_col])
 
 # save separate posteriors
 
-col_names1 = ','.join([col for col in cols if col != m2_col]).replace(m1_col,'m') # COLUMN NAMES FOR OUTPUT
+col_names1 = ','.join([col for col in cols if col != m2_col]).replace(m1_col,'m')
 col_names2 = ','.join([col for col in cols if col != m1_col]).replace(m2_col,'m')
 np.savetxt(out_path.split('.csv')[0]+'-m1.csv',samples1,header=col_names1,comments='',delimiter=',')
 np.savetxt(out_path.split('.csv')[0]+'-m2.csv',samples2,header=col_names2,comments='',delimiter=',')

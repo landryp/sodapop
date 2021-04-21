@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 'INFER-POP-PARAMS -- infer population parameters based on population model and observations'
-__usage__ = 'infer-pop-params pop_params.csv samples.csv [-p pop_model -o /path/to/output.csv -v]'
+__usage__ = 'infer-pop-params pop_params_prior.csv likelihood1.csv likelihood1.csv ... [-p pop_model1 pop_model2 ... -s select_func -o /path/to/output.csv -P target_post_samples -w num_walkers -b num_burnin -m num_like_samples -S num_select_samps -v]'
 __author__ = 'Philippe Landry (pgjlandry@gmail.com)'
 __date__ = '01-2021'
 
@@ -22,10 +22,12 @@ parser.add_argument('-p', '--popmodel', help='name of population model, DEFAULT=
 parser.add_argument('-s', '--select', help='name of selection function, DEFAULT=False', default=False)
 parser.add_argument('-o', '--outpath', help='path for output population parameter samples, DEFAULT=AUTO', default=False)
 parser.add_argument('-m', '--maxsamps', help='maximum number of likelihood samples to use, DEFAULT=5e3', default=5e3)
-parser.add_argument('-S', '--selectsamps', help='number of samples to use for integrating selection function, DEFAULT=5e3', default=5e3)
-parser.add_argument('-P', '--postsamps', help='target number of posterior samples, DEFAULT=1e4', default=1e4)
-parser.add_argument('-w', '--numwalkers', help='number of MCMC chains, DEFAULT=1e2', default=1e2)
-parser.add_argument('-b', '--numburnin', help='number of burn-in samples, DEFAULT=5e2', default=5e2)
+parser.add_argument('-S', '--selectsamps', help='number of samples to use for integrating selection function, DEFAULT=1000', default=1e3)
+parser.add_argument('-P', '--postsamps', help='target number of posterior samples, DEFAULT=10000', default=1e4)
+parser.add_argument('-w', '--numwalkers', help='number of MCMC chains, DEFAULT=50', default=50)
+parser.add_argument('-b', '--numburnin', help='number of burn-in samples, DEFAULT=1000', default=1e3)
+parser.add_argument('-D', '--distbnds', help='bounds on uniform distance prior to use for integrating selection function, DEFAULT=1. 1000.', default=[1.,1000.], nargs=2)
+parser.add_argument('-M', '--bhmassbnds', help='bounds on uniform mass model for BHs, DEFAULT=3. 23.', default=[3.,23.], nargs=2)
 parser.add_argument('-v', '--verbose', action='store_true', default=False)
 args = parser.parse_args()
 
@@ -37,12 +39,15 @@ N_BURNIN = int(args.numburnin)
 N_POSTS = int(args.postsamps)
 N_SELECT = int(args.selectsamps)
 N_LIKES = int(args.maxsamps)
-PRIOR_M_LOWER = 3.
-PRIOR_M_UPPER = 23.
-DL_LOWER = 1.
-DL_UPPER = 1000.
+PRIOR_M_LOWER = float(args.bhmassbnds[0]) # FIXME: switch to loadable NSBH mass model function
+PRIOR_M_UPPER = float(args.bhmassbnds[1])
+DL_LOWER = float(args.distbnds[0])
+DL_UPPER = float(args.distbnds[1])
 
 num_masses = len(args.cols)-1
+
+BNS_MODELS = ['unif_m1m2','peak_m1m2','bimod_m1m2','peakcut_m1m2','bimodcut_m1m2']
+NSBH_MODELS = ['unif_m1_unif_m2','unif_m1_peak_m2','unif_m1_bimod_m2', 'unif_m1_peakcut_m2','unif_m1_bimodcut_m2']
 
 if args.verbose: print('walkers: {0}, burn in: {1}, target posterior samples: {2}, likelihood samples: {3}, selection effect samples: {4}'.format(N_WALKERS,N_BURNIN,N_POSTS,N_LIKES,N_SELECT))
 
@@ -63,12 +68,12 @@ for likedata in args.likedata:
 
 	data = np.genfromtxt(likedata,names=True,dtype=None,delimiter=args.delim)
 	cols = data.dtype.names
-	if args.verbose: print(cols) # check column names; use source-frame masses
+	if args.verbose: print(cols)
 	
 	wts = data[args.cols[-1]]
 
 	if num_masses == 2:
-		m1s = data[args.cols[0]] # COLUMN NAMES FOR INPUT
+		m1s = data[args.cols[0]]
 		m2s = data[args.cols[1]]
 		ids = np.random.choice(range(len(m1s)),N_LIKES,replace=True,p=wts/np.sum(wts))
 		samps = np.array([(m1s[i],m2s[i]) for i in ids],dtype='f,f')
@@ -79,12 +84,13 @@ for likedata in args.likedata:
 	
 	likesamps.append(samps)
 
-# load same number of uniform samples
+# get uniform samples within prior bounds for evaluating selection effect
 
 def samples_for_select(pop_model,lambdaa,mmin_bh=PRIOR_M_LOWER,mmax_bh=PRIOR_M_UPPER):
-
+# FIXME: switch to loadable NSBH mass model function
 	if num_masses > 1.: 
-		if pop_model == 'unif_m1m2' or pop_model == 'peakcut_m1m2' or pop_model == 'bimodcut_m1m2':
+	
+		if pop_model in BNS_MODELS:
 
 			mIsu = np.random.uniform(lambdaa[-2],lambdaa[-1],N_SELECT)
 			mIIsu = np.random.uniform(lambdaa[-2],lambdaa[-1],N_SELECT)
@@ -93,7 +99,7 @@ def samples_for_select(pop_model,lambdaa,mmin_bh=PRIOR_M_LOWER,mmax_bh=PRIOR_M_U
 			m2su = [min(mI,mII) for mI,mII in zip(mIsu,mIIsu)]
 			uniform_samples = list(zip(m1su,m2su,dlsu))	
 		
-		elif pop_model == 'unif_m1_unif_m2' or pop_model == 'unif_m1_peakcut_m2' or pop_model == 'unif_m1_bimodcut_m2':
+		elif pop_model in NSBH_MODELS:
 	
 			m1su = np.random.uniform(mmin_bh,mmax_bh,N_SELECT)
 			m2su = np.random.uniform(lambdaa[-2],lambdaa[-1],N_SELECT)
