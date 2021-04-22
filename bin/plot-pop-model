@@ -9,6 +9,8 @@ from argparse import ArgumentParser
 import numpy as np
 import numpy.random
 import os
+import scipy
+from scipy.stats import gaussian_kde
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
@@ -67,17 +69,29 @@ else:
 
 popdata = np.genfromtxt(args.popmodeldata, names=True, dtype=None, delimiter=args.delim, encoding=None)
 param_names = pop.get_pop_params(args.popmodel).split(',')
-params = np.column_stack([popdata[param_name] for param_name in param_names])
-wts = popdata[args.weightcol]
-wts = wts/np.sum(wts)
+#params = np.column_stack([popdata[param_name] for param_name in param_names])
+#wts = popdata[args.weightcol]
+#wts = wts/np.sum(wts)
 #maxap = np.max(wts)
 
 #maxap_idx = np.where(wts == wts.max())[0][0]
 #maxap_params = params[maxap_idx]
 if args.maxap: maxap_params = [float(param_val) for param_val in str(args.maxap).split(',')]
 
-idxs = np.random.choice(len(wts),size=NUM_MODELS,replace=True,p=wts)
-params_out = [params[idx] for idx in idxs]
+kde = gaussian_kde(np.vstack([popdata[col] for col in param_names]))
+
+mins = []
+maxs = []
+for col in param_names:
+	samps = popdata[col]
+	mins += [np.min(samps)]
+	maxs += [np.max(samps)]
+
+coords = [np.random.uniform(mins[i],maxs[i],NUM_MODELS) for i in range(len(param_names))]
+kde_wts = kde(np.vstack(coords))
+
+idxs = np.random.choice(len(kde_wts),size=NUM_MODELS,replace=True,p=kde_wts/np.sum(kde_wts))
+params_out = [[coords[i][idx] for i in range(len(param_names))] for idx in idxs]
 
 pop_like = pop.get_pop_prior(args.popmodel)
 mgrid = np.arange(MMIN,MMAX,0.02)

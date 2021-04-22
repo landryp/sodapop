@@ -20,7 +20,8 @@ parser = ArgumentParser(description=__doc__)
 parser.add_argument('postdata', type=str)
 parser.add_argument('col', type=str, nargs='+')
 parser.add_argument('-q', '--quantiles', default=[0.05,0.5,0.95], help='quantiles to return, DEFAULT="0.05 0.5 0.95"', type=float, nargs='+')
-parser.add_argument('-N', '--numsamps', default=1e6, help='number of equal-weight samples for quantile calculation, DEFAULT=1e6', type=float)
+#parser.add_argument('-N', '--numsamps', default=1e6, help='number of equal-weight samples for quantile calculation, DEFAULT=1e6', type=float)
+parser.add_argument('-l', '--steplengths', default=[0.1,0.1,0.1,0.1,0.1,0.1,0.1], help='grid spacings for MAP search, DEFAULT=0.1 0.1 0.1 0.1 0.1 0.1 0.1', nargs='+')
 parser.add_argument('-o', '--outpath', default=False, help='path for output, DEFAULT=AUTO')
 parser.add_argument('-w', '--weightcol', default=False, help='EOS weight column, DEFAULT=False', type=str)
 parser.add_argument('--logweights', help='toggle exponentiating weights, DEFAULT=False', action='store_true', default=False)
@@ -75,22 +76,28 @@ wts = wts/np.sum(wts)
 cols_list = args.col
 
 kde = gaussian_kde(np.vstack([postdat[col] for col in cols_list]))
-uniform_samples = []
+
+mins = []
+maxs = []
 for col in cols_list:
 	samps = postdat[col]
-	uniform_samps = np.random.uniform(np.min(samps),np.max(samps),int(args.numsamps))
-	uniform_samples.append(uniform_samps)
+	mins += [np.min(samps)]
+	maxs += [np.max(samps)]
+	
+coords = [np.arange(mins[i],maxs[i],float(args.steplengths[i])) for i in range(len(cols_list))]
+grid = np.meshgrid(*coords)
+uniform_samples = np.vstack([param.ravel() for param in grid])	
+	
 kde_wts = kde(uniform_samples)
-idxs = np.random.choice(range(int(args.numsamps)),size=int(args.numsamps),replace=True,p=kde_wts/np.sum(kde_wts))
-mode = max(idxs, key = list(idxs).count)
-mode_params = [uniform_samps[mode] for uniform_samps in uniform_samples]
+mode = np.argmax(kde_wts)
+mode_params = [uniform_samples[i][mode] for i in range(len(cols_list))]
 print(mode_params)
 
 full_qs = []
 for col in cols_list:
-	samps = postdat[col]
-	samps_equal_wt = np.random.choice(samps,size=int(args.numsamps),p=wts)
-	samps_equal_wt = [samp for samp in samps_equal_wt if not np.isinf(samp)]
+	samps_equal_wt = postdat[col] # specialize to equal-weight posterior samples
+#	samps_equal_wt = np.random.choice(samps,size=int(args.numsamps),p=wts)
+#	samps_equal_wt = [samp for samp in samps_equal_wt if not np.isinf(samp)]
 
 	q_dat = [col]
 	if args.qtype != "hpd": # sym
