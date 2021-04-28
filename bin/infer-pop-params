@@ -47,7 +47,7 @@ DL_UPPER = float(args.distbnds[1])
 num_masses = len(args.cols)-1
 
 BNS_MODELS = ['unif_m1m2','peak_m1m2','bimod_m1m2','peakcut_m1m2','bimodcut_m1m2']
-NSBH_MODELS = ['unif_m1_unif_m2','unif_m1_peak_m2','unif_m1_bimod_m2', 'unif_m1_peakcut_m2','unif_m1_bimodcut_m2']
+NSBH_MODELS = ['unif_m1_unif_m2','unif_m1_peak_m2','unif_m1_bimod_m2', 'unif_m1_peakcut_m2','unif_m1_bimodcut_m2','unif_m1_bimodcut_m2_qpair']
 
 if args.verbose: print('walkers: {0}, burn in: {1}, target posterior samples: {2}, likelihood samples: {3}, selection effect samples: {4}'.format(N_WALKERS,N_BURNIN,N_POSTS,N_LIKES,N_SELECT))
 
