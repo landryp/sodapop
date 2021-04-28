@@ -17,7 +17,7 @@ Make separate posteriors for component masses via marginalization.
 
 Generate prior samples in population parameters for a given population model.
 
-* infer-pop-params /home/phil/Research/nspop/bimodcut_mass_prior.csv /home/phil/Research/nspop/GW170817_reweighted-m1.csv /home/phil/Research/nspop/GW170817_reweighted-m2.csv /home/phil/Research/nspop/GW190425_reweighted-m1.csv /home/phil/Research/nspop/GW190425_reweighted-m2.csv /home/phil/Research/nspop/GW200105_reweighted-m2.csv /home/phil/Research/nspop/GW200115_reweighted-m2.csv -c m1_source m2_source likelihood -p bimodcut_m1m2 bimodcut_m1m2 unif_m1_bimodcut_m2 unif_m1_bimodcut_m2 -s snrcut -P 10000 -w 50 -b 1000 -m 1000 -S 1000 -v
+* infer-pop-params /home/phil/Research/nspop/bimodcut_mass_prior.csv /home/phil/Research/nspop/GW170817_reweighted.csv /home/phil/Research/nspop/GW190425_reweighted.csv /home/phil/Research/nspop/GW200105_reweighted.csv /home/phil/Research/nspop/GW200115_reweighted.csv -c m1_source m2_source likelihood -p bimodcut_m1m2 bimodcut_m1m2 unif_m1_bimodcut_m2 unif_m1_bimodcut_m2 -s snrcut -P 10000 -w 50 -b 1000 -m 1000 -S 1000 -o bimodcut_mass.csv -v
 
 Infer population parameter posterior from observations by MCMC sampling from a given population parameter prior with emcee.
 

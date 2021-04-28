@@ -218,14 +218,14 @@ def o3a_powerpeak_m1_unif_m2(m1,m2,mu=1.34,sigma=0.02,mmin=1.,mmax=3.):
 	
 # NSBH MASS DISTRIBUTIONS
 
-def unif_m1_unif_m2(m1,m2,mmin_bh=3.,mmax_bh=23.,mmin=1.,mmax=3.): # uniform distribution in source frame masses, subject to m1 >= m2 convention
+def unif_m1_unif_m2(m1,m2,mmin=1.,mmax=3.,mmin_bh=3.,mmax_bh=23.): # uniform distribution in source frame masses, subject to m1 >= m2 convention
 
 	if m1 < m2 or m2 > mmax or m2 < mmin or m1 < mmin_bh or m1 > mmax_bh: val = 0.
 	else: val = 1./((mmax-mmin)*(mmax_bh-mmin_bh))
     
 	return val
 	
-def unif_m1_unif_m2_qpair(m1,m2,mmin_bh=3.,mmax_bh=23.,mmin=1.,mmax=3.,beta=2.): # uniform distribution in source frame masses, subject to m1 >= m2 convention
+def unif_m1_unif_m2_qpair(m1,m2,mmin=1.,mmax=3.,beta=2.,mmin_bh=3.,mmax_bh=23.): # uniform distribution in source frame masses, subject to m1 >= m2 convention
 
 	if m1 < m2 or m2 > mmax or m2 < mmin or m1 < mmin_bh or m1 > mmax_bh: val = 0.
 	else:
@@ -234,7 +234,7 @@ def unif_m1_unif_m2_qpair(m1,m2,mmin_bh=3.,mmax_bh=23.,mmin=1.,mmax=3.,beta=2.):
     
 	return val
 	
-def unif_m1_peakcut_m2(m1,m2,mu=1.34,sigma=0.02,mmin_bh=3.,mmax_bh=23.,mmin=1.,mmax=3.): # uniform distribution in source frame masses, subject to m1 >= m2 convention
+def unif_m1_peakcut_m2(m1,m2,mu=1.34,sigma=0.02,mmin=1.,mmax=3.,mmin_bh=3.,mmax_bh=23.): # uniform distribution in source frame masses, subject to m1 >= m2 convention
 
 	if m1 < m2 or m2 > mmax or m2 < mmin or m1 < mmin_bh or m1 > mmax_bh: val = 0.
 	else:
@@ -243,7 +243,7 @@ def unif_m1_peakcut_m2(m1,m2,mu=1.34,sigma=0.02,mmin_bh=3.,mmax_bh=23.,mmin=1.,m
 	
 	return val
 	
-def unif_m1_peakcut_m2_qpair(m1,m2,mu=1.34,sigma=0.02,mmin_bh=3.,mmax_bh=23.,mmin=1.,mmax=3.,beta=2.): # uniform distribution in source frame masses, subject to m1 >= m2 convention
+def unif_m1_peakcut_m2_qpair(m1,m2,mu=1.34,sigma=0.02,mmin=1.,mmax=3.,beta=2.,mmin_bh=3.,mmax_bh=23.): # uniform distribution in source frame masses, subject to m1 >= m2 convention
 
 	if m1 < m2 or m2 > mmax or m2 < mmin or m1 < mmin_bh or m1 > mmax_bh: val = 0.
 	else:
@@ -252,7 +252,7 @@ def unif_m1_peakcut_m2_qpair(m1,m2,mu=1.34,sigma=0.02,mmin_bh=3.,mmax_bh=23.,mmi
 	
 	return val # FIXME: normalize me numerically
 	
-def unif_m1_bimodcut_m2(m1,m2,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,alpha=0.65,mmin_bh=3.,mmax_bh=23.,mmin=0.9,mmax=2.12): # uniform distribution in source frame masses, subject to m1 >= m2 convention
+def unif_m1_bimodcut_m2(m1,m2,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,alpha=0.65,mmin=0.9,mmax=2.12,mmin_bh=3.,mmax_bh=23.): # uniform distribution in source frame masses, subject to m1 >= m2 convention
 
 	if m1 < m2 or m2 > mmax or m2 < mmin or m1 < mmin_bh or m1 > mmax_bh: val = 0.
 	else:
@@ -262,7 +262,7 @@ def unif_m1_bimodcut_m2(m1,m2,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,alpha=0.
 	
 	return val
 	
-def unif_m1_bimodcut_m2_qpair(m1,m2,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,alpha=0.65,mmin=0.9,mmax=2.12,mmin_bh=3.,mmax_bh=23.,beta=2.): # uniform distribution in source frame masses, subject to m1 >= m2 convention
+def unif_m1_bimodcut_m2_qpair(m1,m2,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,alpha=0.65,mmin=0.9,mmax=2.12,beta=2.,mmin_bh=3.,mmax_bh=23.): # uniform distribution in source frame masses, subject to m1 >= m2 convention
 
 	if m1 < m2 or m2 > mmax or m2 < mmin or m1 < mmin_bh or m1 > mmax_bh: val = 0.
 	else:
