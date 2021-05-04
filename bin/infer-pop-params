@@ -26,7 +26,7 @@ parser.add_argument('-S', '--selectsamps', help='number of samples to use for in
 parser.add_argument('-P', '--postsamps', help='target number of posterior samples, DEFAULT=10000', default=1e4)
 parser.add_argument('-w', '--numwalkers', help='number of MCMC chains, DEFAULT=50', default=50)
 parser.add_argument('-b', '--numburnin', help='number of burn-in samples, DEFAULT=1000', default=1e3)
-parser.add_argument('-D', '--distbnds', help='bounds on uniform distance prior to use for integrating selection function, DEFAULT=1. 1000.', default=[1.,1000.], nargs=2)
+parser.add_argument('-D', '--distbnds', help='bounds on quadratic distance prior to use for integrating selection function, DEFAULT=1. 1000.', default=[1.,1000.], nargs=2)
 parser.add_argument('-M', '--bhmassbnds', help='bounds on uniform mass model for BHs, DEFAULT=3. 23.', default=[3.,23.], nargs=2)
 parser.add_argument('-v', '--verbose', action='store_true', default=False)
 args = parser.parse_args()
@@ -176,7 +176,7 @@ def loglikelihood(lambdaa, data):
 		while like_denom <= 0.:
 			for m1,m2,dl in uniform_data:
 				# (select prob)(pop prob)
-				like_denom += select_func(m1,m2,dl)*pop_prob(m1,m2,*lambdaa)
+				like_denom += select_func(m1,m2,dl)*pop_prob(m1,m2,*lambdaa)*dl**2 # build in dL^2 prior
 			if like_denom <= 0. or like_denom != like_denom: print('selection function error: {0}'.format(lambdaa))
 			n_select += N_SELECT
 			uniform_data = samples_for_select(args.popmodel[i],lambdaa)
