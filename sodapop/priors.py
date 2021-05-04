@@ -27,6 +27,13 @@ def flat_m1m2det(m1,m2,dL): # flat in detector frame masses, subject to m1 >= m2
 	else: val = (1.+dL_to_z(dL))**2
     
 	return val
+	
+def flat_m1m2det_quad_dL(m1,m2,dL): # flat in detector frame masses, subject to m1 >= m2 convention and quadratic prior in dL
+    
+	if m1 < m2: val = 0.
+	else: val = dL**2*(1.+dL_to_z(dL))**2
+    
+	return val
 
 def flat_mceta(m1,m2,dL): # flat in chirp mass and symmetric mass ratio
     
