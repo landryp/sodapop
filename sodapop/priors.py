@@ -51,7 +51,7 @@ def flat_mcetadet(m1,m2,dL): # flat in chirp mass and symmetric mass ratio, assu
 
 ### PRIOR LOOKUP FUNCTIONS
     
-binary_mass_priors = {'flat_m1m2': flat_m1m2, 'flat_m1m2det': flat_m1m2det, 'flat_mceta': flat_mceta, 'flat_mcetadet': flat_mcetadet}
+binary_mass_priors = {'flat_m1m2': flat_m1m2, 'flat_m1m2det': flat_m1m2det, 'flat_mceta': flat_mceta, 'flat_mcetadet': flat_mcetadet, 'flat_m1m2det_quad_dL': flat_m1m2det_quad_dL}
 
 def get_binary_mass_prior(key):
 
