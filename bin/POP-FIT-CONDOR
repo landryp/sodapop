@@ -1,0 +1,109 @@
+#!/usr/bin/env python
+
+'POP-FIT-CONDOR -- writes dag to perform population inference in parallel'
+__usage__ = 'POP-FIT-CONDOR /path/to/rundir/ /path/to/sodapop/ likedata1.csv likedata2.csv ... [-n 1e4 -m 50 -P /path/to/eos/metadata.csv -e /path/to/eosdir/ -c /path/to/crust.csv -s "flat" "mmin,mmax" -o /path/for/joint/post.csv -v]'
+__author__ = 'Philippe Landry (pgjlandry@gmail.com)'
+__date__ = '12-2020'
+
+from argparse import ArgumentParser
+import numpy as np
+import subprocess
+import os
+import sodapop.populations as pop
+
+parser = ArgumentParser(description=__doc__)
+parser.add_argument('rundir',type=str)
+parser.add_argument('repopath',type=str)
+parser.add_argument('likedata',nargs="*")
+parser.add_argument('-c', '--col', help='name of mass1, mass2 and likelihood data columns to use, DEFAULT="m1 m2 likelihood"', default=['m1','m2','likelihood'], nargs='+')
+parser.add_argument('-l', '--nlike', help='number of likelihood samples to use, DEFAULT=5e3', default=5e3)
+parser.add_argument('-p', '--popmod', help='name of population model(s), DEFAULT="doublegaussian_m1m2"', default=["doublegaussian_m1m2"], nargs='+')
+parser.add_argument('-P', '--priors', help='prior distribution and hyperparameters for each population parameter, DEFAULT="mmin,mmax+flat12,0.,1.,0.,1."', default="mmin,mmax+flat12,0.,1.,0.,1.", nargs='+')
+parser.add_argument('-n', '--npop', help='number of population model realizations, DEFAULT=1e4', default=1e4)
+parser.add_argument('-B', '--bhpop', help='population parameters for fixed BH mass model, DEFAULT=2. 3. 30.', default=[2.,3.,30.], nargs='+')
+parser.add_argument('-f', '--selfunc', help='name of selection function, DEFAULT=False', default=False)
+parser.add_argument('-S', '--selpriors', help='prior distribution in m1,m2 and dL for integrating selection function, plus integration ranges, DEFAULT="flat_m1m2_quad_dL"', default="flat_m1m2_quad_dL,0.5,30.,0.5,30.,0.,1000.", nargs='+')
+parser.add_argument('-s', '--nsel', help='number of samples to use for integrating selection function, DEFAULT=5000', default=5e3)
+parser.add_argument('-t', '--npost', help='target number of posterior samples, DEFAULT=10000', default=1e4)
+parser.add_argument('-w', '--nwalk', help='number of MCMC chains per job, DEFAULT=AUTO', default=False)
+parser.add_argument('-b', '--nburn', help='number of burn-in samples, DEFAULT=1000', default=1e3)
+parser.add_argument('-o', '--outdir', help='directory to output population parameter samples into, DEFAULT="./"', default="./")
+parser.add_argument('-v', '--verbose', action='store_true', default=False)
+args = parser.parse_args()
+
+###
+
+REPO_PATH = args.repopath
+RUN_PATH = args.rundir
+DAG_PATH = args.rundir+'/'+'POP-FIT.dag'
+OUTDIR = args.outdir
+
+LIKESTR = ' '.join(args.likedata)
+COLSTR = ' '.join(args.col)
+POPMODSTR = ' '.join(args.popmod)
+BHPOPSTR = ' '.join(args.bhpop)
+PRIORSTR = ' '.join(args.priors)
+SELPRIORSTR = ' '.join(args.selpriors)
+
+MAIN_POP_MOD = args.popmod[0]
+MAIN_POP_PARAMS = pop.get_pop_params(MAIN_POP_MOD)
+N_POP_PARAMS = len(MAIN_POP_PARAMS)
+
+if args.nwalk: N_WALKERS_PER_JOB = int(args.nwalk)
+else: N_WALKERS_PER_JOB = 2*N_POP_PARAMS+1
+
+N_POP = int(args.npop)
+N_JOBS = N_POP/N_WALKERS_PER_JOB
+
+N_POST = int(args.npost)
+N_POST_PER_JOB = 1+N_POST/N_WALKERS_PER_JOB
+
+PRIOR_OUTPATH = OUTDIR+'/'+MAIN_POP_MOD+'_prior.csv'
+POST_OUTPATH = OUTDIR+'/'+MAIN_POP_MOD+'.csv'
+
+def post_outpath_batch(post_outpath,job):
+
+	path = os.path.dirname(post_outpath)+'/'+os.path.basename(post_outpath).split('.')[0]+str(job)+'.csv'
+
+	return path
+
+###
+
+with open(DAG_PATH,'w') as outfile:
+	outfile.write('# POP-FIT-CONDOR {0} {1} {2} -c {3} -l {4} -p {5} -P {6} -n {7} -B {8} -f {9} -S {10} -s {11} -t {12} -w {13} -b {14} -o {15} -v\n'.format(RUN_PATH, REPO_PATH, LIKESTR, COLSTR, args.nlike, POPMODSTR, PRIORSTR, N_POP, BHPOPSTR, args.selfunc, SELPRIORSTR, args.nsel, N_POST, N_WALKERS_PER_JOB, args.nburn, args.outdir))
+	outfile.write('# this dag produced with the preceding command\n\n')
+	
+execs = ['sample-pop-params', 'infer-pop-params']
+opts = ['\"$(popmodel) $(numsamps) $(priorstr) $(outpath)\"','\"$(popparams) $(likestr) $(colstr) $(likesamps) $(popmodelstr) $(priorstr) $(popsamps) $(bhparams) $(selectfunc) $(selectpriorstr) $(selectsamps) $(numpost) $(numwalkers) $(numburnin) $(outpath) $(batch)\"']
+
+for i,xec in enumerate(execs):
+	with open(RUN_PATH+xec+'.sub','w') as outfile:
+		outfile.write('universe = vanilla\n')
+		outfile.write('executable = {0}/bin/{1}.sh\n'.format(REPO_PATH,xec))
+		outfile.write('arguments = {0}\n'.format(opts[i]))
+		outfile.write('output = {0}/{1}.out\n'.format(RUN_PATH,xec))
+		outfile.write('error = {0}/{1}.err\n'.format(RUN_PATH,xec))
+		outfile.write('log = {0}/{1}.log\n'.format(RUN_PATH,xec))
+		outfile.write('getenv = True\n')
+		outfile.write('accounting_group = ligo.dev.o3.cbc.pe.lalinference\n')
+		outfile.write('accounting_group_user = {0}\n'.format(whoami))
+		outfile.write('queue 1\n')
+
+j = 0
+with open(DAG_PATH,'a') as outfile:
+
+	outfile.write('JOB {0} {1}/sample-pop-params.sub\n'.format(j,RUN_PATH))
+	outfile.write('VARS {0} popmodel=\"{1}\" numsamps=\"{2}\" priorstr=\"{3}\" outpath=\"{4}\"\n'.format(j,MAIN_POP_MOD,N_POP,PRIORSTR,PRIOR_OUTPATH))
+	outfile.write('RETRY {0} 1\n\n'.format(j))
+
+	batch = 0
+	for j in range(1,NJOBS+1):
+
+		outfile.write('JOB {0} {1}/infer-pop-params.sub\n'.format(j,RUN_PATH))
+		outfile.write('VARS {0} popparams=\"{1}\" likestr=\"{2}\" colstr=\"{3}\" likesamps=\"{4}\" popmodelstr=\"{5}\" priorstr=\"{6}\" popsamps=\"{7}\" bhparams=\"{8}\" selectfunc=\"{9}\" selectpriorstr=\"{10}\" selectsamps=\"{11}\" numpost=\"{12}\" numwalkers=\"{13}\" numburnin=\"{14}\" outpath=\"{15}\" batch=\"{16}\"\n'.format(j,PRIOR_OUTPATH,LIKESTR,COLSTR,args.nlike, POPMODSTR,PRIORSTR,N_POP,BHPOPSTR,args.selfunc,SELPRIORSTR,args.nsel,N_POST_PER_JOB, N_WALKERS_PER_JOB,args.nburn,post_outpath_batch(POST_OUTPATH,j),batch))
+		outfile.write('RETRY {0} 1\n'.format(j))
+		outfile.write('PARENT 0 CHILD {1}\n\n'.format(j))
+		batch += N_POP
+
+time.sleep(5)
+subprocess.call('condor_submit_dag {0}'.format(DAG_PATH),shell=True)	
