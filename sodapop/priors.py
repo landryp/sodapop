@@ -21,6 +21,13 @@ def flat_m1m2(m1,m2,dL): # uniform prior in source frame masses, subject to m1 >
     
 	return val
 
+def flat_m1m2_quad_dL(m1,m2,dL): # flat in detector frame masses, subject to m1 >= m2 convention and quadratic prior in dL
+    
+	if m1 < m2: val = 0.
+	else: val = dL**2
+    
+	return val
+
 def flat_m1m2det(m1,m2,dL): # flat in detector frame masses, subject to m1 >= m2 convention and flat prior in dL
     
 	if m1 < m2: val = 0.
@@ -51,7 +58,7 @@ def flat_mcetadet(m1,m2,dL): # flat in chirp mass and symmetric mass ratio, assu
 
 ### PRIOR LOOKUP FUNCTIONS
     
-binary_mass_priors = {'flat_m1m2': flat_m1m2, 'flat_m1m2det': flat_m1m2det, 'flat_mceta': flat_mceta, 'flat_mcetadet': flat_mcetadet, 'flat_m1m2det_quad_dL': flat_m1m2det_quad_dL}
+binary_mass_priors = {'flat_m1m2': flat_m1m2, 'flat_m1m2det': flat_m1m2det, 'flat_mceta': flat_mceta, 'flat_mcetadet': flat_mcetadet, 'flat_m1m2det_quad_dL': flat_m1m2det_quad_dL, 'flat_m1m2_quad_dL': flat_m1m2_quad_dL}
 
 def get_binary_mass_prior(key):
 

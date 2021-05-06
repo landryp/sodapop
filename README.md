@@ -17,7 +17,7 @@ Make separate posteriors for component masses via marginalization.
 
 Generate prior samples in population parameters for a given population model.
 
-* infer-pop-params /home/phil/Research/nspop/bimodcut_mass_prior.csv /home/phil/Research/nspop/GW170817_reweighted.csv /home/phil/Research/nspop/GW190425_reweighted.csv /home/phil/Research/nspop/GW200105_reweighted.csv /home/phil/Research/nspop/GW200115_reweighted.csv -c m1_source m2_source likelihood -p bimodcut_m1m2 bimodcut_m1m2 unif_m1_bimodcut_m2 unif_m1_bimodcut_m2 -s snrcut -P 10000 -w 50 -b 1000 -m 1000 -S 1000 -o bimodcut_mass.csv -v
+* infer-pop-params /home/phil/Research/emcee/test/bimodcut_mass_prior.csv /home/phil/Research/nspop/GW170817_reweighted.csv /home/phil/Research/nspop/GW190425_reweighted.csv /home/phil/Research/nspop/GW200105_reweighted.csv /home/phil/Research/nspop/GW200115_reweighted.csv -c m1_source m2_source likelihood -p bimodcut_m1m2 bimodcut_m1m2 unif_m1_bimodcut_m2 unif_m1_bimodcut_m2 -s snrcut -n 1000 -w 15 -b 100 -m 5000 -N 5000 -o bimodcut_mass.csv -B 3. 30. -S flat_m1m2_quad_dL,0.5,3.,0.5,3.,1.,1000. flat_m1m2_quad_dL,0.5,3.,0.5,3.,1.,1000. flat_m1m2_quad_dL,0.5,30.,0.5,3.,1.,1000. flat_m1m2_quad_dL,0.5,30.,0.5,3.,1.,1000. -P mmin,mmax+flat12,0.999,1.001,1.5,3. mu1,mu2+flat12,1.,3.,1.,3. sigma1+flat,0.01,2.0 sigma2+flat,0.01,2.0 alpha+flat,0.,1. -v
 
 Infer population parameter posterior from observations by MCMC sampling from a given population parameter prior with emcee.
 

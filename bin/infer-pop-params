@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 'INFER-POP-PARAMS -- infer population parameters based on population model and observations'
-__usage__ = 'infer-pop-params pop_params_prior.csv likelihood1.csv likelihood1.csv ... [-p pop_model1 pop_model2 ... -s select_func -o /path/to/output.csv -P target_post_samples -w num_walkers -b num_burnin -m num_like_samples -S num_select_samps -v]'
+__usage__ = 'infer-pop-params pop_params_prior.csv likelihood1.csv likelihood2.csv ... [-p pop_model1 pop_model2 ... -s select_func -o /path/to/output.csv -P target_num_post_samples -w num_walkers -b num_burnin -m num_like_samples -S num_select_samps -v]'
 __author__ = 'Philippe Landry (pgjlandry@gmail.com)'
 __date__ = '01-2021'
 
@@ -12,24 +12,29 @@ from time import time
 import os
 import emcee
 import sodapop.populations as pop
+import sodapop.parameters as prm
+import sodapop.priors as pri
 
 parser = ArgumentParser(description=__doc__)
 parser.add_argument('popparams')
 parser.add_argument('likedata', nargs='+')
 parser.add_argument('-d', '--delim', help='delimiter for data file, DEFAULT=","', default=',')
 parser.add_argument('-c', '--cols', help='name of mass1, mass2 and likelihood data columns to use, DEFAULT="m1 m2 likelihood"', default=['m1','m2','likelihood'], nargs='+')
-parser.add_argument('-p', '--popmodel', help='name of population model, DEFAULT="doublegaussian_m1m2"', default="doublegaussian_m1m2", nargs='+')
+parser.add_argument('-p', '--popmodel', help='name of population model(s), DEFAULT="doublegaussian_m1m2"', default=["doublegaussian_m1m2"], nargs='+')
 parser.add_argument('-s', '--select', help='name of selection function, DEFAULT=False', default=False)
 parser.add_argument('-o', '--outpath', help='path for output population parameter samples, DEFAULT=AUTO', default=False)
 parser.add_argument('-m', '--maxsamps', help='maximum number of likelihood samples to use, DEFAULT=5e3', default=5e3)
-parser.add_argument('-S', '--selectsamps', help='number of samples to use for integrating selection function, DEFAULT=1000', default=1e3)
-parser.add_argument('-P', '--postsamps', help='target number of posterior samples, DEFAULT=10000', default=1e4)
+parser.add_argument('-N', '--selectsamps', help='number of samples to use for integrating selection function, DEFAULT=1000', default=1e3)
+parser.add_argument('-n', '--postsamps', help='target number of posterior samples, DEFAULT=10000', default=1e4)
 parser.add_argument('-w', '--numwalkers', help='number of MCMC chains, DEFAULT=50', default=50)
 parser.add_argument('-b', '--numburnin', help='number of burn-in samples, DEFAULT=1000', default=1e3)
-parser.add_argument('-D', '--distbnds', help='bounds on quadratic distance prior to use for integrating selection function, DEFAULT=1. 1000.', default=[1.,1000.], nargs=2)
-parser.add_argument('-M', '--bhmassbnds', help='bounds on uniform mass model for BHs, DEFAULT=3. 23.', default=[3.,23.], nargs=2)
+parser.add_argument('-B', '--bhparams', help='population parameters for fixed BH mass model, DEFAULT=2. 3. 30.', default=[2.,3.,30.], nargs='+')
+parser.add_argument('-P', '--priors', help='prior distribution and hyperparameters for each population parameter, DEFAULT="mmin,mmax+flat12,0.,1.,0.,1."', default="mmin,mmax+flat12,0.,1.,0.,1.", nargs='+')
+parser.add_argument('-S', '--selectprior', help='prior distribution in m1,m2 and dL for integrating selection function, plus integration ranges, DEFAULT="flat_m1m2_quad_dL"', default="flat_m1m2_quad_dL,0.5,30.,0.5,30.,0.,1000.", nargs='+')
 parser.add_argument('-v', '--verbose', action='store_true', default=False)
 args = parser.parse_args()
+
+###
 
 if args.outpath: out_path = args.outpath
 else: out_path = os.path.dirname(args.likedata[0])+'/'+args.popmodel[0]+'.csv'
@@ -39,22 +44,21 @@ N_BURNIN = int(args.numburnin)
 N_POSTS = int(args.postsamps)
 N_SELECT = int(args.selectsamps)
 N_LIKES = int(args.maxsamps)
-PRIOR_M_LOWER = float(args.bhmassbnds[0]) # FIXME: switch to loadable NSBH mass model function
-PRIOR_M_UPPER = float(args.bhmassbnds[1])
-DL_LOWER = float(args.distbnds[0])
-DL_UPPER = float(args.distbnds[1])
-
-num_masses = len(args.cols)-1
-
-BNS_MODELS = ['unif_m1m2','peak_m1m2','bimod_m1m2','peakcut_m1m2','bimodcut_m1m2']
-NSBH_MODELS = ['unif_m1_unif_m2','unif_m1_peak_m2','unif_m1_bimod_m2', 'unif_m1_peakcut_m2','unif_m1_bimodcut_m2','unif_m1_bimodcut_m2_qpair']
 
 if args.verbose: print('walkers: {0}, burn in: {1}, target posterior samples: {2}, likelihood samples: {3}, selection effect samples: {4}'.format(N_WALKERS,N_BURNIN,N_POSTS,N_LIKES,N_SELECT))
 
-# get population model
+N_SELECT_GRID = int(1e4)
 
-if len(args.popmodel) == 1: pop_probs = [pop.get_pop_prior(args.popmodel[0]) for likedata in args.likedata]
-else: pop_probs = [pop.get_pop_prior(args.popmodel[i]) for i,likedata in enumerate(args.likedata)]
+lambdabh = args.bhparams
+
+###
+
+# get population model and selection function
+
+pop_probs = [pop.get_pop_prior(args.popmodel[i]) for i,likedata in enumerate(args.likedata)]
+
+pop_param_names = [pop.get_pop_params(args.popmodel[i]) for i,likedata in enumerate(args.likedata)]
+pop_param_names_full = list(set(pop_param_names))
 
 if args.select: select_func = pop.get_select_func(args.select)
 else: select_func = lambda *x : 1.
@@ -68,180 +72,142 @@ for likedata in args.likedata:
 
 	data = np.genfromtxt(likedata,names=True,dtype=None,delimiter=args.delim)
 	cols = data.dtype.names
-	if args.verbose: print(cols)
+	if args.verbose: print(likedata)
 	
 	wts = data[args.cols[-1]]
 
-	if num_masses == 2:
-		m1s = data[args.cols[0]]
-		m2s = data[args.cols[1]]
-		ids = np.random.choice(range(len(m1s)),N_LIKES,replace=True,p=wts/np.sum(wts))
-		samps = np.array([(m1s[i],m2s[i]) for i in ids],dtype='f,f')
-
-	else:	
-		ms = data[args.cols[0]]
-		samps = np.random.choice(ms,N_LIKES,replace=True,p=wts/np.sum(wts))
+	m1s = data[args.cols[0]]
+	m2s = data[args.cols[1]]
+	ids = np.random.choice(range(len(m1s)),N_LIKES,replace=True,p=wts/np.sum(wts))
+	samps = np.array([(m1s[i],m2s[i]) for i in ids],dtype='f,f')
 	
 	likesamps.append(samps)
 
-# get uniform samples within prior bounds for evaluating selection effect
+# generate uniform m1,m2 samples and samples for population distance prior for integrating selection function
 
-def samples_for_select(pop_model,lambdaa,mmin_bh=PRIOR_M_LOWER,mmax_bh=PRIOR_M_UPPER):
-# FIXME: switch to loadable NSBH mass model function
-	if num_masses > 1.: 
+selectsamps = []
+for selectprior in args.selectprior:
+
+	select_prior_func = (selectprior).split(',')[0]
+	m1lb,m1ub,m2lb,m2ub,dllb,dlub = [float(val) for val in (selectprior).split(',')[1:]]
 	
-		if pop_model in BNS_MODELS:
+	m1_select = np.random.uniform(m1lb,m1ub,N_SELECT_GRID)
+	m2_select = np.random.uniform(m2lb,m2ub,N_SELECT_GRID)
+	dl_select = np.random.uniform(dllb,dlub,N_SELECT_GRID)
+	
+	select_prior = pri.get_binary_mass_prior(select_prior_func)
+	wts_select = [select_prior(m1x,m2x,dlx) for m1x,m2x,dlx in zip(m1_select,m2_select,dl_select)]
+	
+	idxs_select = np.random.choice(range(N_SELECT_GRID),N_SELECT,True,p=wts_select/np.sum(wts_select))
+	samps_select = np.array([(m1_select[j],m2_select[j],dl_select[j]) for j in idxs_select],dtype='f,f,f')
+	
+selectsamps += [samps_select]
+	
+# load population parameter prior
 
-			mIsu = np.random.uniform(lambdaa[-2],lambdaa[-1],N_SELECT)
-			mIIsu = np.random.uniform(lambdaa[-2],lambdaa[-1],N_SELECT)
-			dlsu = np.random.uniform(DL_LOWER,DL_UPPER,N_SELECT)
-			m1su = [max(mI,mII) for mI,mII in zip(mIsu,mIIsu)]
-			m2su = [min(mI,mII) for mI,mII in zip(mIsu,mIIsu)]
-			uniform_samples = list(zip(m1su,m2su,dlsu))	
+def logprior(lambdaa, pop_param_names, priors):
+
+	param_names = []
+	prior_funcs = []
+	prior_params = []
+	for prior_key in priors:
+
+		param_names += [(prior_key.split('+')[0]).split(',')]
+		prior_funcs += [(prior_key.split('+')[1]).split(',')[0]]
+		prior_params += [[float(val) for val in (prior_key.split('+')[1]).split(',')[1:]]]
+
+	lambdaa_sorted = []
+	for param_name in param_names:
+		idx = [pop_param_names.index(name) for name in param_name]
+		lambdaa_sorted += [lambdaa[idx]]
+
+	logpriors = []
+	for param,prior_func,prior_params in zip(lambdaa_sorted,prior_funcs,prior_params):
+		prior = prm.get_param_prior_func(prior_func)
+		logpriors += [np.log(prior(*param,*prior_params))]
 		
-		elif pop_model in NSBH_MODELS:
-	
-			m1su = np.random.uniform(mmin_bh,mmax_bh,N_SELECT)
-			m2su = np.random.uniform(lambdaa[-2],lambdaa[-1],N_SELECT)
-			dlsu = np.random.uniform(DL_LOWER,DL_UPPER,N_SELECT)
-			uniform_samples = list(zip(m1su,m2su,dlsu))	
-		
-	else:
-		mIsu = np.random.uniform(lambdaa[-2],lambdaa[-1],N_SELECT)
-		dlsu = np.random.uniform(DL_LOWER,DL_UPPER,N_SELECT)
-		uniform_samples = list(zip(mIsu,dlsu))
-
-	return uniform_samples
-		
-# calculate population parameter posterior
-
-pop_params = np.genfromtxt(args.popparams, names=True, dtype=None, delimiter=args.delim, encoding=None)
-pop_param_names = pop_params.dtype.names
-
-def logprior(lambdaa, pop_params, pop_model):
-
-	norm = np.prod([max(pop_params[param])-min(pop_params[param]) for param in pop_params.dtype.names])
-	
-	mmin = lambdaa[-2]
-	mmax = lambdaa[-1]
-	
-	if pop_model == 'unif_m1m2':
-
-		prior = 1./norm if min(pop_params['mmin']) <= mmin <= max(pop_params['mmin']) and min(pop_params['mmax']) <= mmax <= max(pop_params['mmax']) and mmin < mmax else 0.
-		
-	elif pop_model == 'peakcut_m1m2':
-	
-		mu = lambdaa[0]
-		sigma = lambdaa[1]
-	
-		prior = 1./norm if min(pop_params['mmin']) <= mmin <= max(pop_params['mmin']) and min(pop_params['mmax']) <= mmax <= max(pop_params['mmax']) and mmin < mmax and max(mmin,min(pop_params['mu'])) <= mu <= min(mmax,max(pop_params['mu'])) and min(pop_params['sigma']) <= sigma <= max(pop_params['sigma']) else 0.
-		
-	elif pop_model == 'bimodcut_m1m2':
-	
-		mu1 = lambdaa[0]
-		sigma1 = lambdaa[1]
-		mu2 = lambdaa[2]
-		sigma2 = lambdaa[3]
-		alpha = lambdaa[4]
-	
-		prior = 1./norm if min(pop_params['mmin']) <= mmin <= max(pop_params['mmin']) and min(pop_params['mmax']) <= mmax <= max(pop_params['mmax']) and mmin < mmax and max(mmin,min(pop_params['mu1'])) <= mu1 <= min(mmax,max(pop_params['mu1'])) and min(pop_params['sigma1']) <= sigma1 <= max(pop_params['sigma1']) and max(mu1,min(pop_params['mu2'])) <= mu2 <= min(mmax,max(pop_params['mu2'])) and min(pop_params['sigma2']) <= sigma2 <= max(pop_params['sigma2']) and min(pop_params['alpha']) <= alpha <= max(pop_params['alpha']) else 0.
-		
-	#FIXME: make this a loadable dictionary, like pop models
-    
-	log_prior = np.log(prior)
+	log_prior = np.sum(logpriors)
 
 	return log_prior
 
-def logposterior(lambdaa, data):
+# define population parameter posterior
 
-	log_prior = logprior(lambdaa, pop_params, args.popmodel[0])
-    
+def logposterior(lambdaa, data, pop_probs, sdata, sfunc, pop_param_names, priors):
+
+	log_prior = logprior(lambdaa, pop_param_names, priors)
+	
 	if not np.isfinite(log_prior):
+#		print('prior:',lambdaa)
 		return -np.inf
 
-    # (pop prob)(obs likelihood)
-	return log_prior + loglikelihood(lambdaa, data)
+	# (pop prob)(obs likelihood)
+	return log_prior + loglikelihood(lambdaa, data, pop_probs, sdata, sfunc)
 	
-def loglikelihood(lambdaa, data):
-    
+def loglikelihood(lambdaa, data, pop_probs, sdata, sfunc):
+
 	log_like = 0.
 
-	for i,likedata in enumerate(data):
-	
+	for i,(likedata,selectdata) in enumerate(zip(data,sdata)):
 		pop_prob = pop_probs[i]
-		uniform_data = samples_for_select(args.popmodel[i],lambdaa)
-    
-		n_select = 0.
-		like_denom = 0.
-		while like_denom <= 0.:
-			for m1,m2,dl in uniform_data:
-				# (select prob)(pop prob)
-				like_denom += select_func(m1,m2,dl)*pop_prob(m1,m2,*lambdaa)*dl**2 # build in dL^2 prior
-			if like_denom <= 0. or like_denom != like_denom: print('selection function error: {0}'.format(lambdaa))
-			n_select += N_SELECT
-			uniform_data = samples_for_select(args.popmodel[i],lambdaa)
-
+		
 		like_num = 0.
 		for m1,m2 in likedata:
 			# (obs likelihood)(pop prob)
-			like_num += pop_prob(m1,m2,*lambdaa)
-
-		like_denom = like_denom/N_SELECT    	
+			try: like_num += pop_prob(m1,m2,*lambdaa,*lambdabh) # check if the pop model is a NSBH one, and pass it the BH parameters
+			except: like_num += pop_prob(m1,m2,*lambdaa) # if the pop model is a BNS one, pass it only the NS parameters
+			
+		like_denom = 0.
+		for m1,m2,dl in selectdata:
+			# (select prob)(pop prob)
+			try: like_denom += sfunc(m1,m2,dl)*pop_prob(m1,m2,*lambdaa,*lambdabh)
+			except: like_denom += sfunc(m1,m2,dl)*pop_prob(m1,m2,*lambdaa)
+		
+		if like_denom <= 0.: print('denom:', lambdaa)
+		if like_num < 0.: print('num:',lambdaa)
+		like_denom = like_denom/len(selectdata)
 		like_num = like_num/len(likedata)
 		log_like += np.log(like_num/like_denom)
+		
+		if not np.isfinite(log_like):
+			return -np.inf
 
 	return log_like
 
-mmin_ini_tmp = np.random.uniform(min(pop_params['mmin']), max(pop_params['mmin']), N_WALKERS) # initial mmin points
-mmax_ini_tmp = np.random.uniform(min(pop_params['mmax']), max(pop_params['mmax']), N_WALKERS) # initial mmax points
-mmin_ini = [min(mmin_i,mmax_i) for mmin_i,mmax_i in zip(mmin_ini_tmp,mmax_ini_tmp)]
-mmax_ini = [max(mmin_i,mmax_i) for mmin_i,mmax_i in zip(mmin_ini_tmp,mmax_ini_tmp)]
+# load population parameter prior samples and initialize emcee walkers
 
-ini = []
-if args.popmodel[0] == 'peakcut_m1m2':
-	mu_ini = np.random.uniform(min(pop_params['mu']), max(pop_params['mu']), N_WALKERS)
-	sigma_ini = np.random.uniform(min(pop_params['sigma']), max(pop_params['sigma']), N_WALKERS)
-	ini = ini + [mu_ini,sigma_ini]
-elif args.popmodel[0] == 'bimodcut_m1m2':
-	mu1_ini_tmp = np.random.uniform(min(pop_params['mu1']), max(pop_params['mu1']), N_WALKERS)
-	sigma1_ini = np.random.uniform(min(pop_params['sigma1']), max(pop_params['sigma1']), N_WALKERS)
-	mu2_ini_tmp = np.random.uniform(min(pop_params['mu2']), max(pop_params['mu2']), N_WALKERS)
-	sigma2_ini = np.random.uniform(min(pop_params['sigma2']), max(pop_params['sigma2']), N_WALKERS)
-	alpha_ini = np.random.uniform(min(pop_params['alpha']), max(pop_params['alpha']), N_WALKERS)
-	mu1_ini = [min(mu1_i,mu2_i) for mu1_i,mu2_i in zip(mu1_ini_tmp,mu2_ini_tmp)]
-	mu2_ini = [max(mu1_i,mu2_i) for mu1_i,mu2_i in zip(mu1_ini_tmp,mu2_ini_tmp)]
-	mu1_ini = [mu1 if mmin_ini[j] < mu1 < mmax_ini[j] else np.random.uniform(mmin_ini[j],mmax_ini[j],1)[0] for j,mu1 in enumerate(mu1_ini)]
-	mu2_ini = [mu2 if mu1_ini[j] < mu2 < mmax_ini[j] else np.random.uniform(mu1_ini[j],mmax_ini[j],1)[0] for j,mu2 in enumerate(mu2_ini)]
-	ini = ini + [mu1_ini,sigma1_ini,mu2_ini,sigma2_ini,alpha_ini]
-#FIXME: make loadable dictionary
+pop_params = np.genfromtxt(args.popparams, names=True, dtype=None, delimiter=args.delim, encoding=None)
+param_names = pop_params.dtype.names
+num_prior_samps = len(pop_params[param_names[0]])
 
-inisamples = np.array(ini+[mmin_ini,mmax_ini]).T
-ndims = inisamples.shape[1] # number of parameters/dimensions
-loglikelihood.ncalls = 0 # for bookkeeping set number of likelihood calls to zero
-argslist = (likesamps,) # set additional args for the posterior (the data and any variables besides alpha)
+ini_idxs = np.random.choice(range(num_prior_samps),N_WALKERS)
+ini_samps = np.array([pop_params[param_name][ini_idxs] for param_name in param_names]).T
+ndims = ini_samps.shape[1] # number of pop params
 
-sampler = emcee.EnsembleSampler(N_WALKERS, ndims, logposterior, args=argslist) # set up the sampler
+loglikelihood.ncalls = 0 # initialize likelihood call counter
+argslist = (likesamps,pop_probs,selectsamps,select_func,param_names,args.priors) # arguments to pass to posterior besides pop parameters lambdaa
 
-# pass the initial samples and total number of samples required
-t0 = time() # start time
-sampler.run_mcmc(inisamples, N_POSTS+N_BURNIN);
+sampler = emcee.EnsembleSampler(N_WALKERS, ndims, logposterior, args=argslist)
+
+# do the mcmc with emcee
+
+t0 = time() # time how long it takes
+sampler.run_mcmc(ini_samps, N_POSTS+N_BURNIN);
 t1 = time()
-
 timeemcee = (t1-t0)
-if args.verbose: print("Time taken to run 'emcee' is {} seconds".format(timeemcee))
+if args.verbose: print("emcee ran for {} seconds".format(timeemcee))
 
-acls = sampler.get_autocorr_time(quiet=True)
-if args.verbose: print("The autocorrelation lengths for population parameters are {0}".format(acls))
+acls = sampler.get_autocorr_time(quiet=True) # get chain autocorrelation lengths
+if args.verbose: print("autocorrelation lengths for population parameters are {0}".format(acls))
 
-# thin out the chain
 samples_emcee = sampler.chain[:, N_BURNIN::int(max(acls)), :].reshape((-1, ndims))
-if args.verbose: print("Number of independent samples is {0}".format(len(samples_emcee)))
+if args.verbose: print("number of independent samples is {0}".format(len(samples_emcee))) # thin out chain to independent samples only
 
-ess = int(len(samples_emcee) / timeemcee)
-if args.verbose: print("Effective samples per second: {0}".format(ess))	
+ess = int(len(samples_emcee) / timeemcee) # repor effective samples per second
+if args.verbose: print("effective samples per second is {0}".format(ess))
 
 # save population parameters posterior
-posts = np.ones((len(samples_emcee),1))
+
+posts = np.ones((len(samples_emcee),1)) # explicitly print equal weights
 pop_param_samps = np.append(np.array(samples_emcee),np.array(posts),axis=1)
 col_names = pop.get_pop_params(args.popmodel[0])+',weight'
 np.savetxt(out_path,pop_param_samps[np.isfinite(pop_param_samps).all(axis=1)],header=col_names,comments='',delimiter=',')
