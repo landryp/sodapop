@@ -94,7 +94,7 @@ for param in MAIN_POP_PARAMS:
 ###
 
 with open(DAG_PATH,'w') as outfile:
-	outfile.write('# POP-FIT-CONDOR {0} {1} {2} -c {3} -l {4} -p {5} -P {6} -n {7} -B {8} -f {9} -S {10} -s {11} -t {12} -w {13} -b {14} -o {15} -v\n'.format(RUN_PATH, REPO_PATH, LIKESTR, COLSTR, int(args.nlike), POPMODSTR, alt_prior_str, N_POP, BHPOPSTR, args.selfunc, SELPRIORSTR, int(args.nsel), N_POST, N_WALKERS_PER_JOB, int(args.nburn), args.outdir))
+	outfile.write('# POP-FIT-CONDOR {0} {1} {2} -c {3} -l {4} -p {5} -P {6} -n {7} -B {8} -f {9} -S {10} -s {11} -t {12} -w {13} -b {14} -o {15} -v\n'.format(RUN_PATH, REPO_PATH, LIKESTR, COLSTR, int(args.nlike), POPMODSTR, PRIORSTR, N_POP, BHPOPSTR, args.selfunc, SELPRIORSTR, int(args.nsel), N_POST, N_WALKERS_PER_JOB, int(args.nburn), args.outdir))
 	outfile.write('# this dag produced with the preceding command\n\n')
 	
 execs = ['sample-pop-params', 'infer-pop-params']
@@ -117,7 +117,7 @@ j = 0
 with open(DAG_PATH,'a') as outfile:
 
 	outfile.write('JOB {0} {1}/sample-pop-params.sub\n'.format(j,RUN_PATH))
-	outfile.write('VARS {0} popmodel=\"{1}\" numsamps=\"{2}\" priorstr=\"{3}\" outpath=\"{4}\"\n'.format(j,MAIN_POP_MOD,N_POP,PRIORSTR,PRIOR_OUTPATH))
+	outfile.write('VARS {0} popmodel=\"{1}\" numsamps=\"{2}\" priorstr=\"{3}\" outpath=\"{4}\"\n'.format(j,MAIN_POP_MOD,N_POP,alt_prior_str,PRIOR_OUTPATH))
 	outfile.write('RETRY {0} 1\n\n'.format(j))
 
 	batch = 0
