@@ -59,7 +59,7 @@ N_POP = int(args.npop)
 N_JOBS = int(N_POP/N_WALKERS_PER_JOB)
 
 N_POST = int(args.npost)
-N_POST_PER_JOB = 1+N_POST/N_WALKERS_PER_JOB
+N_POST_PER_JOB = int(1+N_POST/N_WALKERS_PER_JOB)
 
 PRIOR_OUTPATH = OUTDIR+'/'+MAIN_POP_MOD+'_prior.csv'
 POST_OUTPATH = OUTDIR+'/'+MAIN_POP_MOD+'.csv'
@@ -94,7 +94,7 @@ for param in MAIN_POP_PARAMS:
 ###
 
 with open(DAG_PATH,'w') as outfile:
-	outfile.write('# POP-FIT-CONDOR {0} {1} {2} -c {3} -l {4} -p {5} -P {6} -n {7} -B {8} -f {9} -S {10} -s {11} -t {12} -w {13} -b {14} -o {15} -v\n'.format(RUN_PATH, REPO_PATH, LIKESTR, COLSTR, args.nlike, POPMODSTR, alt_prior_str, N_POP, BHPOPSTR, args.selfunc, SELPRIORSTR, args.nsel, N_POST, N_WALKERS_PER_JOB, args.nburn, args.outdir))
+	outfile.write('# POP-FIT-CONDOR {0} {1} {2} -c {3} -l {4} -p {5} -P {6} -n {7} -B {8} -f {9} -S {10} -s {11} -t {12} -w {13} -b {14} -o {15} -v\n'.format(RUN_PATH, REPO_PATH, LIKESTR, COLSTR, int(args.nlike), POPMODSTR, alt_prior_str, N_POP, BHPOPSTR, args.selfunc, SELPRIORSTR, int(args.nsel), N_POST, N_WALKERS_PER_JOB, int(args.nburn), args.outdir))
 	outfile.write('# this dag produced with the preceding command\n\n')
 	
 execs = ['sample-pop-params', 'infer-pop-params']
@@ -124,7 +124,7 @@ with open(DAG_PATH,'a') as outfile:
 	for j in range(1,N_JOBS+1):
 
 		outfile.write('JOB {0} {1}/infer-pop-params.sub\n'.format(j,RUN_PATH))
-		outfile.write('VARS {0} popparams=\"{1}\" likestr=\"{2}\" colstr=\"{3}\" likesamps=\"{4}\" popmodelstr=\"{5}\" priorstr=\"{6}\" popsamps=\"{7}\" bhparams=\"{8}\" selectfunc=\"{9}\" selectpriorstr=\"{10}\" selectsamps=\"{11}\" numpost=\"{12}\" numwalkers=\"{13}\" numburnin=\"{14}\" outpath=\"{15}\" batch=\"{16}\"\n'.format(j,PRIOR_OUTPATH,LIKESTR,COLSTR,args.nlike, POPMODSTR,PRIORSTR,N_POP,BHPOPSTR,args.selfunc,SELPRIORSTR,args.nsel,N_POST_PER_JOB, N_WALKERS_PER_JOB,args.nburn,post_outpath_batch(POST_OUTPATH,j),batch))
+		outfile.write('VARS {0} popparams=\"{1}\" likestr=\"{2}\" colstr=\"{3}\" likesamps=\"{4}\" popmodelstr=\"{5}\" priorstr=\"{6}\" popsamps=\"{7}\" bhparams=\"{8}\" selectfunc=\"{9}\" selectpriorstr=\"{10}\" selectsamps=\"{11}\" numpost=\"{12}\" numwalkers=\"{13}\" numburnin=\"{14}\" outpath=\"{15}\" batch=\"{16}\"\n'.format(j,PRIOR_OUTPATH,LIKESTR,COLSTR,int(args.nlike), POPMODSTR,PRIORSTR,N_POP,BHPOPSTR,args.selfunc,SELPRIORSTR,int(args.nsel),N_POST_PER_JOB, N_WALKERS_PER_JOB,int(args.nburn),post_outpath_batch(POST_OUTPATH,j),batch))
 		outfile.write('RETRY {0} 1\n'.format(j))
 		outfile.write('PARENT 0 CHILD {0}\n\n'.format(j))
 		batch += N_POP
