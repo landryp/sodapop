@@ -7,4 +7,4 @@ outpath=$4
 
 IFS=' ' read -r -a prior <<< "$priorstr"
 
-echo sample-pop-params $popmodel -n $numsamps -p ${prior[@]} -o $outpath -v
+sample-pop-params $popmodel -n $numsamps -p ${prior[@]} -o $outpath -v
