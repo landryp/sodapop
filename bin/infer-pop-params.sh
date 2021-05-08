@@ -20,8 +20,8 @@ batch=${16}
 IFS=',' read -r -a like <<< "$likestr"
 IFS=',' read -r -a col <<< "$colstr"
 IFS=',' read -r -a popmod <<< "$popmodelstr"
-IFS='_' read -r -a prior <<< "$priorstr"
+IFS='=' read -r -a prior <<< "$priorstr"
 IFS=',' read -r -a bh <<< "$bhparams"
-IFS='_' read -r -a selprior <<< "$selectpriorstr"
+IFS='+' read -r -a selprior <<< "$selectpriorstr"
 
 infer-pop-params $popparams ${like[@]} -c ${col[@]} -l $likesamps -p ${popmod[@]} -P ${prior[@]}-n $popsamps -B ${bh[@]} -f $selectfunc -S ${selprior[@]} -s $selectsamps -t $numpost -w $numwalkers -b $numburnin -o $outpath --batch $batch -v

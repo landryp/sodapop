@@ -45,8 +45,8 @@ LIKESTR = ','.join(args.likedata)
 COLSTR = ','.join(args.col)
 POPMODSTR = ','.join(args.popmod)
 BHPOPSTR = ','.join(args.bhpop)
-PRIORSTR = '_'.join(args.priors)
-SELPRIORSTR = '_'.join(args.selpriors)
+PRIORSTR = '='.join(args.priors)
+SELPRIORSTR = '+'.join(args.selpriors)
 
 MAIN_POP_MOD = args.popmod[0]
 MAIN_POP_PARAMS = (pop.get_pop_params(MAIN_POP_MOD)).split(',')
