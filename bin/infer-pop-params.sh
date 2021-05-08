@@ -17,4 +17,11 @@ numburnin=${14}
 outpath=${15}
 batch=${16}
 
-infer-pop-params $popparams $likestr -c $colstr -l $likesamps -p $popmodelstr -P $priorstr -n $popsamps -B $bhparams -f $selectfunc -S $selectpriorstr -s $selectsamps -t $numpost -w $numwalkers -b $nburnin -o $outpath --batch $batch -v
+IFS=',' read -r -a like <<< "$likestr"
+IFS=',' read -r -a col <<< "$colstr"
+IFS=',' read -r -a popmod <<< "$popmodelstr"
+IFS='_' read -r -a prior <<< "$priorstr"
+IFS=',' read -r -a bh <<< "$bhparams"
+IFS='_' read -r -a selprior <<< "$selectpriorstr"
+
+infer-pop-params $popparams ${like[@]} -c ${col[@]} -l $likesamps -p ${popmod[@]} -P ${prior[@]}-n $popsamps -B ${bh[@]} -f $selectfunc -S ${selprior[@]} -s $selectsamps -t $numpost -w $numwalkers -b $nburnin -o $outpath --batch $batch -v
