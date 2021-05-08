@@ -39,30 +39,30 @@ args = parser.parse_args()
 ###
 
 if args.outpath: out_path = args.outpath
-else: out_path = os.path.dirname(args.likedata[0])+'/'+args.popmodel[0]+'.csv'
+else: out_path = os.path.dirname(args.likedata[0])+'/'+args.popmod[0]+'.csv'
 
-N_WALKERS = int(args.numwalkers)
-N_BURNIN = int(args.numburnin)
-N_POSTS = int(args.postsamps)
-N_SELECT = int(args.selectsamps)
-N_LIKES = int(args.maxsamps)
+N_WALKERS = int(args.nwalk)
+N_BURNIN = int(args.nburn)
+N_POSTS = int(args.npost)
+N_SELECT = int(args.nsel)
+N_LIKES = int(args.nlike)
 
 if args.verbose: print('walkers: {0}, burn in: {1}, target posterior samples: {2}, likelihood samples: {3}, selection effect samples: {4}'.format(N_WALKERS,N_BURNIN,N_POSTS,N_LIKES,N_SELECT))
 
 N_SELECT_GRID = int(1e4)
 
-lambdabh = args.bhparams
+lambdabh = args.bhpop
 
 ###
 
 # get population model and selection function
 
-pop_probs = [pop.get_pop_prior(args.popmodel[i]) for i,likedata in enumerate(args.likedata)]
+pop_probs = [pop.get_pop_prior(args.popmod[i]) for i,likedata in enumerate(args.likedata)]
 
-pop_param_names = [pop.get_pop_params(args.popmodel[i]) for i,likedata in enumerate(args.likedata)]
+pop_param_names = [pop.get_pop_params(args.popmod[i]) for i,likedata in enumerate(args.likedata)]
 pop_param_names_full = list(set(pop_param_names))
 
-if args.select: select_func = pop.get_select_func(args.select)
+if args.selfunc: select_func = pop.get_select_func(args.selfunc)
 else: select_func = lambda *x : 1.
 
 # load likelihood samples
@@ -76,10 +76,10 @@ for likedata in args.likedata:
 	cols = data.dtype.names
 	if args.verbose: print(likedata)
 	
-	wts = data[args.cols[-1]]
+	wts = data[args.col[-1]]
 
-	m1s = data[args.cols[0]]
-	m2s = data[args.cols[1]]
+	m1s = data[args.col[0]]
+	m2s = data[args.col[1]]
 	ids = np.random.choice(range(len(m1s)),N_LIKES,replace=True,p=wts/np.sum(wts))
 	samps = np.array([(m1s[i],m2s[i]) for i in ids],dtype='f,f')
 	
@@ -88,7 +88,7 @@ for likedata in args.likedata:
 # generate uniform m1,m2 samples and samples for population distance prior for integrating selection function
 
 selectsamps = []
-for selectprior in args.selectprior:
+for selectprior in args.selpriors:
 
 	select_prior_func = (selectprior).split(',')[0]
 	m1lb,m1ub,m2lb,m2ub,dllb,dlub = [float(val) for val in (selectprior).split(',')[1:]]
@@ -212,6 +212,6 @@ if args.verbose: print("effective samples per second is {0}".format(ess))
 
 posts = np.ones((len(samples_emcee),1)) # explicitly print equal weights
 pop_param_samps = np.append(np.array(samples_emcee),np.array(posts),axis=1)
-col_names = pop.get_pop_params(args.popmodel[0])+',weight'
+col_names = pop.get_pop_params(args.popmod[0])+',weight'
 np.savetxt(out_path,pop_param_samps[np.isfinite(pop_param_samps).all(axis=1)],header=col_names,comments='',delimiter=',')
 
