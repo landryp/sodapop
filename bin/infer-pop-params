@@ -181,7 +181,7 @@ pop_params = np.genfromtxt(args.popparams, names=True, dtype=None, delimiter=arg
 param_names = pop_params.dtype.names
 num_prior_samps = len(pop_params[param_names[0]])
 
-if args.batch: ini_idxs = range(args.batch,N_WALKERS+args.batch)
+if args.batch: ini_idxs = range(int(args.batch),N_WALKERS+int(args.batch))
 else: ini_idxs = np.random.choice(range(num_prior_samps),N_WALKERS)
 ini_samps = np.array([pop_params[param_name][ini_idxs] for param_name in param_names]).T
 ndims = ini_samps.shape[1] # number of pop params
