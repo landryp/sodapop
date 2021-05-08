@@ -87,10 +87,12 @@ for prior in args.priors:
 		param_named_shapes[param_name] = prior_shape
 		param_named_vals[param_name] = ','.join(param_vals[i:i+2])
 
-alt_prior_str = ''		
+alt_prior_str = []		
 for param in MAIN_POP_PARAMS:
 
-	alt_prior_str += param_named_shapes[param]+','+param_named_vals[param]+' '
+	alt_prior_str += [param_named_shapes[param]+','+param_named_vals[param]]
+	
+alt_prior_str = '+'.join(alt_prior_str)
 
 ###
 
