@@ -18,6 +18,13 @@ def flat12_prior(x,y,lbx=0.,ubx=1.,lby=0.,uby=1.):
 	else: val = 1./((ubx-lbx)*(uby-lby))
 
 	return val
+	
+def flat1234_prior(x,y,z,w,lbx=0.,ubx=1.,lby=0.,uby=1.,lbz=0.,ubz=1.,lbw=0.,ubw=1.):
+
+	if x > ubx or x < lbx or y > uby or y < lby or x > y or z > min(ubz,ubx) or z < max(lbz,lbx) or w > min(ubw,uby) or z < max(lbw,lby): val = 0.
+	else: val = 1./((ubx-lbx)*(uby-lby)*(ubz-lbz)*(ubw-lbw))
+
+	return val
 
 def normal_prior(x,mu=0.,sigma=1.):
 
@@ -38,7 +45,7 @@ def normal(size=1,med=0.,std=1.):
 ### PRIOR LOOKUP AND SAMPLING FUNCTIONS
 	
 param_priors = {'flat': flat, 'norm': normal}
-param_prior_funcs = {'flat': flat_prior, 'flat12': flat12_prior, 'norm': normal_prior}
+param_prior_funcs = {'flat': flat_prior, 'flat12': flat12_prior, 'flat1234': flat1234_prior, 'norm': normal_prior}
 
 def get_param_prior_func(key):
 
