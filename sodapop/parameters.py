@@ -21,7 +21,7 @@ def flat12_prior(x,y,lbx=0.,ubx=1.,lby=0.,uby=1.):
 	
 def flat1234_prior(x,y,z,w,lbx=0.,ubx=1.,lby=0.,uby=1.,lbz=0.,ubz=1.,lbw=0.,ubw=1.):
 
-	if x > ubx or x < lbx or y > uby or y < lby or x > y or z > min(ubz,y) or z < max(lbz,x) or w > min(ubw,y) or z < max(lbw,x) or z > w: val = 0.
+	if x > ubx or x < lbx or y > uby or y < lby or x > y or z > min(ubz,y) or z < max(lbz,x) or w > min(ubw,y) or w < max(lbw,x) or z > w: val = 0.
 	else: val = 1./((ubx-lbx)*(uby-lby)*(ubz-lbz)*(ubw-lbw))
 
 	return val
