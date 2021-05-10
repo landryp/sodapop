@@ -24,7 +24,7 @@ parser.add_argument('-d', '--delim', help='delimiter for data file, DEFAULT=","'
 parser.add_argument('-w', '--weightcol', help='name of posterior weight column to use, DEFAULT="weight"', default='weight')
 parser.add_argument('-p', '--popmodel', help='name of population model, DEFAULT="doublegaussian_m1m2"', default="doublegaussian_m1m2", type=str)
 parser.add_argument('-o', '--outpath', help='path for output population parameter samples, DEFAULT=AUTO', default=False)
-parser.add_argument('-m', '--mrange', help='mass range for plot, DEFAULT="0.5 3."', default=[0.5,3.])
+parser.add_argument('-m', '--mrange', help='mass range for plot, DEFAULT="0.5 3."', default=[0.5,3.],nargs=2)
 parser.add_argument('-n', '--nummods', help='number of population model realizations to use for computing confidence intervals, DEFAULT=10000', default=1e4, type=float)
 parser.add_argument('-b', '--binary', help='make separate m1 and m2 plots', action='store_false', default=True)
 parser.add_argument('-M', '--maxap', help='plot the maximum a posteriori instead of the median (give comma-separated MAP parameters)', default=False, type=str)
@@ -51,8 +51,8 @@ if args.refdat:
 		refmed = [np.percentile(refdata[column],50) for column in cols]
 		refvals.append(refmed)
 
-MMIN = args.mrange[0]
-MMAX = args.mrange[1]
+MMIN = float(args.mrange[0])
+MMAX = float(args.mrange[1])
 
 NUM_MODELS = int(args.nummods)
 
