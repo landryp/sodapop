@@ -61,8 +61,14 @@ if 'mu1' in param_names and 'mu2' in param_names:
 	
 	mu1s_out = []
 	mu2s_out = []
-	for mu1,mu2 in zip(mu1s,mu2s):
+	for mu1,mu2,mmin,mmax in zip(mu1s,mu2s,mmins_out,mmaxs_out):
 	
+		while mu1 < mmin or mu2 > mmax or mu1 > mu2:
+			j = param_names.index('mu1')
+			k = param_names.index('mu2')
+			mu1 = params.get_param_samples(1,args.priors[j].split(',')[0],args.priors[j].split(',')[1:])
+			mu2 = params.get_param_samples(1,args.priors[k].split(',')[0],args.priors[k].split(',')[1:])
+
 		mu1s_out.append(min(mu1,mu2))
 		mu2s_out.append(max(mu1,mu2))
 		
