@@ -16,14 +16,15 @@ parser = ArgumentParser(description=__doc__)
 parser.add_argument('rundir',type=str)
 parser.add_argument('repopath',type=str)
 parser.add_argument('likedata',nargs="*")
-parser.add_argument('-c', '--col', help='name of mass1, mass2 and likelihood data columns to use, DEFAULT="m1 m2 likelihood"', default=['m1','m2','likelihood'], nargs='+')
+parser.add_argument('-c', '--col', help='name of mass1, mass2, distance and likelihood data columns to use, DEFAULT="m1 m2 dL likelihood"', default=['m1','m2','dL','likelihood'], nargs='+')
 parser.add_argument('-l', '--nlike', help='number of likelihood samples to use, DEFAULT=5e3', default=5e3, type=float)
 parser.add_argument('-p', '--popmod', help='name of population model(s), DEFAULT="bimodcut_m1m2"', default=["bimodcut_m1m2"], nargs='+')
 parser.add_argument('-P', '--priors', help='prior distribution and hyperparameters for each population parameter, DEFAULT="mmin,mmax+flat12,0.,1.,0.,1."', default="mmin,mmax+flat12,0.,1.,0.,1.", nargs='+')
+parser.add_argument('-D', '--distprior', help='prior distribution for the distance, DEFAULT="quad,0.,1000."', default="quad,0.,1000.")
 parser.add_argument('-n', '--npop', help='number of population model realizations, DEFAULT=1e4', default=1e4, type=float)
 parser.add_argument('-B', '--bhpop', help='population parameters for fixed BH mass model, DEFAULT=2. 3. 30.', default=[2.,3.,30.], nargs='+')
 parser.add_argument('-f', '--selfunc', help='name of selection function, DEFAULT=False', default=False)
-parser.add_argument('-S', '--selpriors', help='prior distribution in m1,m2 and dL for integrating selection function, plus integration ranges, DEFAULT="flat_m1m2_quad_dL"', default="flat_m1m2_quad_dL,0.5,30.,0.5,30.,0.,1000.", nargs='+')
+parser.add_argument('-S', '--selpriors', help='ranges in m1,m2 and dL for integrating selection function, DEFAULT="0.5,30.,0.5,30.,0.,1000."', default="0.5,30.,0.5,30.,0.,1000.", nargs='+')
 parser.add_argument('-s', '--nsel', help='number of samples to use for integrating selection function, DEFAULT=5000', default=5e3, type=float)
 parser.add_argument('-t', '--npost', help='target number of posterior samples, DEFAULT=10000', default=1e4, type=float)
 parser.add_argument('-w', '--nwalk', help='number of MCMC chains per job, DEFAULT=AUTO', default=False)
@@ -97,11 +98,11 @@ alt_prior_str = '+'.join(alt_prior_str)
 ###
 
 with open(DAG_PATH,'w') as outfile:
-	outfile.write('# POP-FIT-CONDOR {0} {1} {2} -c {3} -l {4} -p {5} -P {6} -n {7} -B {8} -f {9} -S {10} -s {11} -t {12} -w {13} -b {14} -o {15} -v\n'.format(RUN_PATH, REPO_PATH, LIKESTR, COLSTR, int(args.nlike), POPMODSTR, PRIORSTR, N_POP, BHPOPSTR, args.selfunc, SELPRIORSTR, int(args.nsel), N_POST, N_WALKERS_PER_JOB, int(args.nburn), args.outdir))
+	outfile.write('# POP-FIT-CONDOR {0} {1} {2} -c {3} -l {4} -p {5} -P {6} -D {7} -n {8} -B {9} -f {10} -S {11} -s {12} -t {13} -w {14} -b {15} -o {16} -v\n'.format(RUN_PATH, REPO_PATH, ' '.join(args.likedata), ' '.join(args.col), int(args.nlike), ' '.join(args.popmod), ' '.join(args.priors), args.distprior, N_POP, ' '.join(args.bhpop), args.selfunc, ' '.join(args.selpriors), int(args.nsel), N_POST, N_WALKERS_PER_JOB, int(args.nburn), args.outdir))
 	outfile.write('# this dag produced with the preceding command\n\n')
 	
 execs = ['sample-pop-params', 'infer-pop-params']
-opts = ['\"$(popmodel) $(numsamps) $(priorstr) $(outpath)\"','\"$(popparams) $(likestr) $(colstr) $(likesamps) $(popmodelstr) $(priorstr) $(bhparams) $(selectfunc) $(selectpriorstr) $(selectsamps) $(numpost) $(numwalkers) $(numburnin) $(outpath) $(batch)\"']
+opts = ['\"$(popmodel) $(numsamps) $(priorstr) $(outpath)\"','\"$(popparams) $(likestr) $(colstr) $(likesamps) $(popmodelstr) $(priorstr) $(distprior) $(bhparams) $(selectfunc) $(selectpriorstr) $(selectsamps) $(numpost) $(numwalkers) $(numburnin) $(outpath) $(batch)\"']
 
 for i,xec in enumerate(execs):
 	with open(RUN_PATH+xec+'.sub','w') as outfile:
@@ -127,7 +128,7 @@ with open(DAG_PATH,'a') as outfile:
 	for j in range(1,N_JOBS+1):
 
 		outfile.write('JOB {0} {1}/infer-pop-params.sub\n'.format(j,RUN_PATH))
-		outfile.write('VARS {0} popparams=\"{1}\" likestr=\"{2}\" colstr=\"{3}\" likesamps=\"{4}\" popmodelstr=\"{5}\" priorstr=\"{6}\" bhparams=\"{7}\" selectfunc=\"{8}\" selectpriorstr=\"{9}\" selectsamps=\"{10}\" numpost=\"{11}\" numwalkers=\"{12}\" numburnin=\"{13}\" outpath=\"{14}\" batch=\"{15}\"\n'.format(j,PRIOR_OUTPATH,LIKESTR,COLSTR,int(args.nlike), POPMODSTR,PRIORSTR,BHPOPSTR,args.selfunc,SELPRIORSTR,int(args.nsel),N_POST_PER_JOB, N_WALKERS_PER_JOB,int(args.nburn),post_outpath_batch(POST_OUTPATH,j),batch))
+		outfile.write('VARS {0} popparams=\"{1}\" likestr=\"{2}\" colstr=\"{3}\" likesamps=\"{4}\" popmodelstr=\"{5}\" priorstr=\"{6}\" distprior=\"{7}\" bhparams=\"{8}\" selectfunc=\"{9}\" selectpriorstr=\"{10}\" selectsamps=\"{11}\" numpost=\"{12}\" numwalkers=\"{13}\" numburnin=\"{14}\" outpath=\"{15}\" batch=\"{16}\"\n'.format(j,PRIOR_OUTPATH,LIKESTR,COLSTR,int(args.nlike), POPMODSTR,PRIORSTR,args.distprior,BHPOPSTR,args.selfunc,SELPRIORSTR,int(args.nsel),N_POST_PER_JOB, N_WALKERS_PER_JOB,int(args.nburn),post_outpath_batch(POST_OUTPATH,j),batch))
 		outfile.write('RETRY {0} 1\n'.format(j))
 		outfile.write('PARENT 0 CHILD {0}\n\n'.format(j))
 		batch += N_WALKERS_PER_JOB

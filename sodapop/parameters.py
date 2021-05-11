@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import numpy as np
-from scipy.stats import uniform, norm
+from scipy.stats import uniform, norm, powerlaw
 
 ### BASIC PRIOR DISTRIBUTIONS
 
@@ -49,9 +49,13 @@ def normal(size=1,med=0.,std=1.):
 
 	return norm.rvs(loc=med,scale=std,size=int(size))
 	
+def quad(size=1,lb=0.,ub=1.):
+
+	return powerlaw.rvs(3.,loc=lb,scale=ub-lb,size=int(size))
+	
 ### PRIOR LOOKUP AND SAMPLING FUNCTIONS
 	
-param_priors = {'flat': flat, 'norm': normal}
+param_priors = {'flat': flat, 'norm': normal, 'quad': quad}
 param_prior_funcs = {'flat': flat_prior, 'flat12': flat12_prior, 'flat123': flat123_prior, 'flat1234': flat1234_prior, 'norm': normal_prior}
 
 def get_param_prior_func(key):
