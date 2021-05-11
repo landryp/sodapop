@@ -101,7 +101,7 @@ with open(DAG_PATH,'w') as outfile:
 	outfile.write('# this dag produced with the preceding command\n\n')
 	
 execs = ['sample-pop-params', 'infer-pop-params']
-opts = ['\"$(popmodel) $(numsamps) $(priorstr) $(outpath)\"','\"$(popparams) $(likestr) $(colstr) $(likesamps) $(popmodelstr) $(priorstr) $(popsamps) $(bhparams) $(selectfunc) $(selectpriorstr) $(selectsamps) $(numpost) $(numwalkers) $(numburnin) $(outpath) $(batch)\"']
+opts = ['\"$(popmodel) $(numsamps) $(priorstr) $(outpath)\"','\"$(popparams) $(likestr) $(colstr) $(likesamps) $(popmodelstr) $(priorstr) $(bhparams) $(selectfunc) $(selectpriorstr) $(selectsamps) $(numpost) $(numwalkers) $(numburnin) $(outpath) $(batch)\"']
 
 for i,xec in enumerate(execs):
 	with open(RUN_PATH+xec+'.sub','w') as outfile:
@@ -127,7 +127,7 @@ with open(DAG_PATH,'a') as outfile:
 	for j in range(1,N_JOBS+1):
 
 		outfile.write('JOB {0} {1}/infer-pop-params.sub\n'.format(j,RUN_PATH))
-		outfile.write('VARS {0} popparams=\"{1}\" likestr=\"{2}\" colstr=\"{3}\" likesamps=\"{4}\" popmodelstr=\"{5}\" priorstr=\"{6}\" popsamps=\"{7}\" bhparams=\"{8}\" selectfunc=\"{9}\" selectpriorstr=\"{10}\" selectsamps=\"{11}\" numpost=\"{12}\" numwalkers=\"{13}\" numburnin=\"{14}\" outpath=\"{15}\" batch=\"{16}\"\n'.format(j,PRIOR_OUTPATH,LIKESTR,COLSTR,int(args.nlike), POPMODSTR,PRIORSTR,N_POP,BHPOPSTR,args.selfunc,SELPRIORSTR,int(args.nsel),N_POST_PER_JOB, N_WALKERS_PER_JOB,int(args.nburn),post_outpath_batch(POST_OUTPATH,j),batch))
+		outfile.write('VARS {0} popparams=\"{1}\" likestr=\"{2}\" colstr=\"{3}\" likesamps=\"{4}\" popmodelstr=\"{5}\" priorstr=\"{6}\" bhparams=\"{7}\" selectfunc=\"{8}\" selectpriorstr=\"{9}\" selectsamps=\"{10}\" numpost=\"{11}\" numwalkers=\"{12}\" numburnin=\"{13}\" outpath=\"{14}\" batch=\"{15}\"\n'.format(j,PRIOR_OUTPATH,LIKESTR,COLSTR,int(args.nlike), POPMODSTR,PRIORSTR,BHPOPSTR,args.selfunc,SELPRIORSTR,int(args.nsel),N_POST_PER_JOB, N_WALKERS_PER_JOB,int(args.nburn),post_outpath_batch(POST_OUTPATH,j),batch))
 		outfile.write('RETRY {0} 1\n'.format(j))
 		outfile.write('PARENT 0 CHILD {0}\n\n'.format(j))
 		batch += N_WALKERS_PER_JOB
