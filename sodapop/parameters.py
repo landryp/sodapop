@@ -52,7 +52,7 @@ def normal(size=1,med=0.,std=1.):
 ### PRIOR LOOKUP AND SAMPLING FUNCTIONS
 	
 param_priors = {'flat': flat, 'norm': normal}
-param_prior_funcs = {'flat': flat_prior, 'flat12': flat12_prior, 'flat1234': flat1234_prior, 'norm': normal_prior}
+param_prior_funcs = {'flat': flat_prior, 'flat12': flat12_prior, 'flat123': flat123_prior, 'flat1234': flat1234_prior, 'norm': normal_prior}
 
 def get_param_prior_func(key):
 
