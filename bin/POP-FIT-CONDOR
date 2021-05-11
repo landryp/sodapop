@@ -80,7 +80,7 @@ for prior in args.priors:
 	param_names = param_names_str.split(',')
 	prior_str = prior.split('+')[1]
 	prior_shape = prior_str.split(',')[0]
-	if prior_shape == 'flat12' or prior_shape == 'flat1234': prior_shape = 'flat'
+	if prior_shape == 'flat12' or prior_shape == 'flat123' or prior_shape == 'flat1234': prior_shape = 'flat'
 	param_vals = prior_str.split(',')[1:]
 	
 	for i,param_name in enumerate(param_names):

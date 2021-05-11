@@ -18,6 +18,13 @@ def flat12_prior(x,y,lbx=0.,ubx=1.,lby=0.,uby=1.):
 	else: val = 1./((ubx-lbx)*(uby-lby))
 
 	return val
+
+def flat123_prior(x,y,z,lbx=0.,ubx=1.,lby=0.,uby=1.,lbz=0.,ubz=1.):
+
+	if x > ubx or x < lbx or y > uby or y < lby or x > y or z > min(ubz,y) or z < max(lbz,x): val = 0.
+	else: val = 1./((ubx-lbx)*(uby-lby)*(ubz-lbz))
+
+	return val
 	
 def flat1234_prior(x,y,z,w,lbx=0.,ubx=1.,lby=0.,uby=1.,lbz=0.,ubz=1.,lbw=0.,ubw=1.):
 
