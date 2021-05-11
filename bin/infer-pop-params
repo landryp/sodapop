@@ -104,7 +104,7 @@ for selectprior in args.selpriors:
 	idxs_select = np.random.choice(range(N_SELECT_GRID),N_SELECT,True,p=wts_select/np.sum(wts_select))
 	samps_select = np.array([(m1_select[j],m2_select[j],dl_select[j]) for j in idxs_select],dtype='f,f,f')
 	
-selectsamps += [samps_select]
+	selectsamps += [samps_select]
 	
 # load population parameter prior
 
