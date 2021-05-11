@@ -122,7 +122,7 @@ def logprior(lambdaa, pop_param_names, priors):
 	lambdaa_sorted = []
 	for param_name in param_names:
 		idx = [pop_param_names.index(name) for name in param_name]
-		lambdaa_sorted += [lambdaa[idx]]
+		lambdaa_sorted += [(lambdaa[item] for item in idx)]
 
 	logpriors = []
 	for param,prior_func,prior_params in zip(lambdaa_sorted,prior_funcs,prior_params):
@@ -150,7 +150,9 @@ def loglikelihood(lambdaa, data, pop_probs, sdata, sfunc):
 
 	log_like = 0.
 
-	for i,(likedata,selectdata) in enumerate(zip(data,sdata)):
+	for i in range(len(data)):
+		likedata = data[i]
+		selectdata = sdata[i]
 		pop_prob = pop_probs[i]
 		
 		like_num = 0.
