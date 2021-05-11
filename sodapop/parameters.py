@@ -39,6 +39,13 @@ def normal_prior(x,mu=0.,sigma=1.):
     
 	return val
 	
+def quad_prior(x,lb=0.,ub=1.):
+
+	if x < lb or x > ub: val = 0.
+	else: val = 3.*((x-lb)/(ub-lb))**2/(ub-lb)
+    
+	return val
+	
 ### BASIC PRIOR DISTRIBUTIONS SAMPLERS
 
 def flat(size=1,lb=0.,ub=1.):
@@ -56,7 +63,7 @@ def quad(size=1,lb=0.,ub=1.):
 ### PRIOR LOOKUP AND SAMPLING FUNCTIONS
 	
 param_priors = {'flat': flat, 'norm': normal, 'quad': quad}
-param_prior_funcs = {'flat': flat_prior, 'flat12': flat12_prior, 'flat123': flat123_prior, 'flat1234': flat1234_prior, 'norm': normal_prior}
+param_prior_funcs = {'flat': flat_prior, 'flat12': flat12_prior, 'flat123': flat123_prior, 'flat1234': flat1234_prior, 'norm': normal_prior, 'quad': quad_prior}
 
 def get_param_prior_func(key):
 

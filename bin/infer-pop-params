@@ -84,7 +84,7 @@ for likedata in args.likedata:
 	m2s = data[args.col[1]]
 	dls = data[args.col[2]]
 	ids = np.random.choice(range(len(m1s)),N_LIKES,replace=True,p=wts/np.sum(wts))
-	samps = np.array([(m1s[i],m2s[i],dls[i]) for i in ids],dtype='f,f')
+	samps = np.array([(m1s[i],m2s[i],dls[i]) for i in ids],dtype='f,f,f')
 	
 	likesamps.append(samps)
 
