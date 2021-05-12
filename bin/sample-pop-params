@@ -90,6 +90,7 @@ for i,param in enumerate(param_names):
 
 	if param == 'mmax': samps_out.append(mmaxs_out)
 	elif param == 'mmin': samps_out.append(mmins_out)
+	elif param == 'mu': samps_out.append(mus_out)
 	elif param == 'mu1': samps_out.append(mu1s_out)
 	elif param == 'mu2': samps_out.append(mu2s_out)
 	else: samps_out.append(samps[i])
