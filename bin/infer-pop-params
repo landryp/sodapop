@@ -209,8 +209,12 @@ if args.verbose: print("emcee ran for {} seconds".format(timeemcee))
 acls = sampler.get_autocorr_time(quiet=True) # get chain autocorrelation lengths
 if args.verbose: print("autocorrelation lengths for population parameters are {0}".format(acls))
 
-samples_emcee = sampler.chain[:, N_BURNIN::int(max(acls)), :].reshape((-1, ndims))
-if args.verbose: print("number of independent samples is {0}".format(len(samples_emcee))) # thin out chain to independent samples only
+if np.all(np.isfinite(acls)):
+	samples_emcee = sampler.chain[:, N_BURNIN::int(max(acls)), :].reshape((-1, ndims))
+	if args.verbose: print("number of independent samples is {0}".format(len(samples_emcee))) # thin out chain to independent samples only
+else:
+	samples_emcee = sampler.chain[:, N_BURNIN:, :].reshape((-1, ndims))
+	if args.verbose: print("could not thin chain, raw number of samples is {0}".format(len(samples_emcee)))
 
 ess = int(len(samples_emcee) / timeemcee) # repor effective samples per second
 if args.verbose: print("effective samples per second is {0}".format(ess))

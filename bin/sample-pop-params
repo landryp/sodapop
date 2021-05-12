@@ -53,6 +53,19 @@ if 'mmax' in param_names and 'mmin' in param_names:
 	
 		mmaxs_out.append(max(mmax,mmin))
 		mmins_out.append(min(mmax,mmin))
+
+if 'mu' in param_names:
+
+	mus = samps[param_names.index('mu')]
+	
+	mus_out = []
+	for mu,mmin,mmax in zip(mus,mmins_out,mmaxs_out):
+	
+		while mu < mmin or mu > mmax:
+			j = param_names.index('mu')
+			mu = params.get_param_samples(1,args.priors[j].split(',')[0],args.priors[j].split(',')[1:])
+
+		mus_out.append(mu)
 		
 if 'mu1' in param_names and 'mu2' in param_names:
 
