@@ -247,7 +247,7 @@ def unif_m1_peakcut_m2_qpair(m1,m2,mu=1.34,sigma=0.02,mmin=1.,mmax=3.,beta=2.,mm
 
 	if m1 < m2 or m2 > mmax or m2 < mmin or m1 < mmin_bh or m1 > mmax_bh: val = 0.
 	else:
-		norm = scipy.integrate.dblquad(lambda m1,m2 : gaussian(m2,mu,sigma)*unif_mass(m1,mmin_bh,mmax_bh)*(m2/m1)**beta, mmin_bh, mmax_bh, mmin, mmax)[0]
+		norm = 1.#scipy.integrate.dblquad(lambda m1,m2 : gaussian(m2,mu,sigma)*unif_mass(m1,mmin_bh,mmax_bh)*(m2/m1)**beta, mmin_bh, mmax_bh, mmin, mmax)[0]
 		val = gaussian(m2,mu,sigma)*unif_mass(m1,mmin_bh,mmax_bh)*(m2/m1)**beta/norm
 	
 	return val # FIXME: normalize me numerically
