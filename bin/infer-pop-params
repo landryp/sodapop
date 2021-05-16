@@ -167,7 +167,7 @@ def loglikelihood(lambdaa, data, pop_probs, sdata, sfunc):
 			try: like_num += pop_prob(m1,m2,*lambdaa,*lambdabh)*dfunc(dl,*dparams) # check if the pop model is a NSBH one, and pass it the BH parameters
 			except: like_num += pop_prob(m1,m2,*lambdaa)*dfunc(dl,*dparams) # if the pop model is a BNS one, pass it only the NS parameters
 		
-		if i == 0 or pop_prob != prop_probs[i-1]:	
+		if i == 0 or pop_prob != pop_probs[i-1]:	
 			like_denom = 0.
 			for m1,m2,dl in selectdata:
 				# (select prob)(pop prob)
