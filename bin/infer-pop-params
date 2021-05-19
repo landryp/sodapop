@@ -63,7 +63,7 @@ pop_param_names_full = list(set(pop_param_names))
 param_names_header = []
 for prior_key in args.priors:
 	param_names_header += [(prior_key.split('+')[0]).split(',')]
-param_names_header = ','.join(param_names_header)
+param_names_header = ','.join(np.array(param_names_header).ravel())
 
 if not args.selfunc: select_func = lambda *x : 1.
 elif args.selfunc == 'False': select_func = lambda *x : 1.
@@ -229,6 +229,6 @@ if args.verbose: print("effective samples per second is {0}".format(ess))
 
 posts = np.ones((len(samples_emcee),1)) # explicitly print equal weights
 pop_param_samps = np.append(np.array(samples_emcee),np.array(posts),axis=1)
-col_names = pop.get_pop_params(args.popmod[0])+',weight'
+col_names = param_names_header+',weight'
 np.savetxt(out_path,pop_param_samps[np.isfinite(pop_param_samps).all(axis=1)],header=col_names,comments='',delimiter=',')
 
