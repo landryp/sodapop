@@ -60,6 +60,11 @@ pop_probs = [pop.get_pop_prior(args.popmod[i]) for i,likedata in enumerate(args.
 pop_param_names = [pop.get_pop_params(args.popmod[i]) for i,likedata in enumerate(args.likedata)]
 pop_param_names_full = list(set(pop_param_names))
 
+param_names_header = []
+for prior_key in args.priors:
+	param_names_header += [(prior_key.split('+')[0]).split(',')]
+param_names_header = ','.join(param_names_header)
+
 if not args.selfunc: select_func = lambda *x : 1.
 elif args.selfunc == 'False': select_func = lambda *x : 1.
 else: select_func = pop.get_select_func(args.selfunc)

@@ -90,8 +90,8 @@ for prior in args.priors:
 
 alt_prior_str = []		
 for param in MAIN_POP_PARAMS:
-
-	alt_prior_str += [param_named_shapes[param]+','+param_named_vals[param]]
+	if param in param_names_vals.keys:
+		alt_prior_str += [param_named_shapes[param]+','+param_named_vals[param]]
 	
 alt_prior_str = '+'.join(alt_prior_str)
 
