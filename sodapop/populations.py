@@ -172,7 +172,7 @@ def peakcut_m1m2_qpair(m1,m2,mu=1.34,sigma=0.02,mmin=1.,mmax=3.,beta=2.): # gaus
 
 	if m1 < m2 or m1 > mmax or m2 < mmin: val = 0.
 	else:
-		norm = scipy.integrate.dblquad(lambda m1,m2 : gaussian(m1,mu,sigma)*gaussian(m2,mu,sigma)*(m2/m1)**beta, mmin, mmax, mmin, mmax)[0]
+		norm = 1. #scipy.integrate.dblquad(lambda m1,m2 : gaussian(m1,mu,sigma)*gaussian(m2,mu,sigma)*(m2/m1)**beta, mmin, mmax, mmin, mmax)[0]
 		val = 2.*gaussian(m1,mu,sigma)*gaussian(m2,mu,sigma)*(m2/m1)**beta/norm
 	
 	return val # FIXME: normalize me numerically
@@ -184,7 +184,7 @@ def bimodcut_m1m2_qpair(m1,m2,mu1=1.34,sigma1=0.07,mu2=1.80,sigma2=0.21,alpha=0.
 		norm1 = 0.5*(scipy.special.erf((mmax-mu1)/(np.sqrt(2)*sigma1))-scipy.special.erf((mmin-mu1)/(np.sqrt(2)*sigma1)))
 		norm2 = 0.5*(scipy.special.erf((mmax-mu2)/(np.sqrt(2)*sigma2))-scipy.special.erf((mmin-mu2)/(np.sqrt(2)*sigma2)))
 			
-		norm = scipy.integrate.dblquad(lambda m1,m2 : (alpha*gaussian(m1,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m1,mu2,sigma2)/norm2)*(alpha*gaussian(m2,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m2,mu2,sigma2)/norm2)*(m2/m1)**beta, mmin, mmax, mmin, mmax)[0]
+		norm = 1. #scipy.integrate.dblquad(lambda m1,m2 : (alpha*gaussian(m1,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m1,mu2,sigma2)/norm2)*(alpha*gaussian(m2,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m2,mu2,sigma2)/norm2)*(m2/m1)**beta, mmin, mmax, mmin, mmax)[0]
 			
 		val = 2.*(alpha*gaussian(m1,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m1,mu2,sigma2)/norm2)*(alpha*gaussian(m2,mu1,sigma1)/norm1 + (1.-alpha)*gaussian(m2,mu2,sigma2)/norm2)*(m2/m1)**beta/norm
 	
