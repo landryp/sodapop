@@ -89,13 +89,6 @@ for prior in args.priors:
 		param_named_shapes[param_name] = prior_shape
 		param_named_vals[param_name] = ','.join(param_vals[2*i:2*i+2])
 
-alt_prior_str = []		
-for param in MAIN_POP_PARAMS:
-	if param in param_named_vals.keys():
-		alt_prior_str += [param_named_shapes[param]+','+param_named_vals[param]]
-	
-alt_prior_str = '+'.join(alt_prior_str)
-
 ###
 
 with open(DAG_PATH,'w') as outfile:
@@ -122,7 +115,7 @@ j = 0
 with open(DAG_PATH,'a') as outfile:
 
 	outfile.write('JOB {0} {1}/sample-pop-params.sub\n'.format(j,RUN_PATH))
-	outfile.write('VARS {0} popmodel=\"{1}\" numsamps=\"{2}\" priorstr=\"{3}\" fixedstr=\"{4}\" outpath=\"{5}\"\n'.format(j,MAIN_POP_MOD,N_POP,alt_prior_str,'+'.join(args.fixed),PRIOR_OUTPATH))
+	outfile.write('VARS {0} popmodel=\"{1}\" numsamps=\"{2}\" priorstr=\"{3}\" fixedstr=\"{4}\" outpath=\"{5}\"\n'.format(j,MAIN_POP_MOD,N_POP,PRIORSTR,'+'.join(args.fixed),PRIOR_OUTPATH))
 	outfile.write('RETRY {0} 1\n\n'.format(j))
 
 	batch = 0
