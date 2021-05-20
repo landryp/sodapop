@@ -91,7 +91,7 @@ lambda_dict = {}
 j = 0
 for param in pop_param_names:
 	if param in fixed_params:
-		lambda_dict[param] = lambda x : fixed_dict[param]
+		lambda_dict[param] = lambda x, param=param : fixed_dict[param]
 	else:
 		lambda_dict[param] = lambda x, j=j : x[j]
 		j += 1
