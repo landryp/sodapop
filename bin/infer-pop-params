@@ -22,6 +22,7 @@ parser.add_argument('-c', '--col', help='name of mass1, mass2, distance and like
 parser.add_argument('-l', '--nlike', help='number of likelihood samples to use, DEFAULT=5e3', default=5e3)
 parser.add_argument('-p', '--popmod', help='name of population model(s), DEFAULT="doublegaussian_m1m2"', default=["doublegaussian_m1m2"], nargs='+')
 parser.add_argument('-P', '--priors', help='prior distribution and hyperparameters for each population parameter, DEFAULT="mmin,mmax+flat12,0.,1.,0.,1."', default="mmin,mmax+flat12,0.,1.,0.,1.", nargs='+')
+parser.add_argument('-F', '--fixed', help='fixed population parameter values (e.g. mmin,1.0), DEFAULT=False', default=False, nargs='+')
 parser.add_argument('-D', '--distprior', help='prior distribution for the distance, DEFAULT="quad,0.,1000."', default="quad,0.,1000.")
 parser.add_argument('-B', '--bhpop', help='population parameters for fixed BH mass model, DEFAULT=2. 3. 30.', default=[2.,3.,30.], nargs='+')
 parser.add_argument('-f', '--selfunc', help='name of selection function, DEFAULT=False', default=False)
@@ -57,13 +58,7 @@ lambdabh = args.bhpop
 
 pop_probs = [pop.get_pop_prior(args.popmod[i]) for i,likedata in enumerate(args.likedata)]
 
-pop_param_names = [pop.get_pop_params(args.popmod[i]) for i,likedata in enumerate(args.likedata)]
-pop_param_names_full = list(set(pop_param_names))
-
-param_names_header = []
-for prior_key in args.priors:
-	param_names_header += [(prior_key.split('+')[0]).split(',')]
-param_names_header = ','.join(np.array(param_names_header).ravel())
+pop_param_names = (pop.get_pop_params(args.popmod[0])).split(',') # get population parameters from first-specified population model, check that they match what's in the prior sammples later
 
 if not args.selfunc: select_func = lambda *x : 1.
 elif args.selfunc == 'False': select_func = lambda *x : 1.
@@ -72,6 +67,34 @@ else: select_func = pop.get_select_func(args.selfunc)
 dist_shape = (args.distprior).split(',')[0]
 dparams = [float(val) for val in (args.distprior).split(',')[1:]]
 dfunc = prm.get_param_prior_func(dist_shape)
+
+# store population prior hyperparameters in a dictionary
+
+prior_dict = {}
+for prior_str in args.priors:
+
+	prior_key = prior_str.split('+')[0]
+	prior_func = prm.get_param_prior_func((prior_str.split('+')[1]).split(',')[0])
+	hyp_params = [float(val) for val in (prior_str.split('+')[1]).split(',')[1:]]
+	prior_dict[prior_key] = [prior_func,hyp_params]
+
+fixed_dict = {}
+fixed_params = []
+fixed_vals = []
+if args.fixed:
+	fixed_params = [fixed_str.split(',')[0] for fixed_str in args.fixed]
+	fixed_vals = [fixed_str.split(',')[1] for fixed_str in args.fixed]
+	for i,fixed_param in enumerate(fixed_params):
+		fixed_dict[fixed_param] = float(fixed_vals[i])
+	
+lambda_dict = {}
+j = 0
+for param in pop_param_names:
+	if param in fixed_params:
+		lambda_dict[param] = lambda x : fixed_dict[param]
+	else:
+		lambda_dict[param] = lambda x, j=j : x[j]
+		j += 1
 
 # load likelihood samples
 
@@ -120,26 +143,17 @@ for selectprior in args.selpriors:
 	
 # load population parameter prior
 
-def logprior(lambdaa, pop_param_names, priors):
+def logprior(lambdaa, lambda_dict, prior_dict):
 
-	param_names = []
-	prior_funcs = []
-	prior_params = []
-	for prior_key in priors:
-
-		param_names += [(prior_key.split('+')[0]).split(',')]
-		prior_funcs += [(prior_key.split('+')[1]).split(',')[0]]
-		prior_params += [[float(val) for val in (prior_key.split('+')[1]).split(',')[1:]]]
-
-	lambdaa_sorted = []
-	for param_name in param_names:
-		idx = [pop_param_names.index(name) for name in param_name]
-		lambdaa_sorted += [(lambdaa[item] for item in idx)]
-
+	prior_keys = prior_dict.keys()
+	
 	logpriors = []
-	for param,prior_func,prior_params in zip(lambdaa_sorted,prior_funcs,prior_params):
-		prior = prm.get_param_prior_func(prior_func)
-		logpriors += [np.log(prior(*param,*prior_params))]
+	for prior_key in prior_keys:
+	
+		prior_func, hyp_params = prior_dict[prior_key]
+		short_lambda = [lambda_dict[param](lambdaa) for param in prior_key.split(',')]
+		
+		logpriors += [np.log(prior_func(*short_lambda,*hyp_params))]
 		
 	log_prior = np.sum(logpriors)
 
@@ -147,18 +161,21 @@ def logprior(lambdaa, pop_param_names, priors):
 
 # define population parameter posterior
 
-def logposterior(lambdaa, data, pop_probs, sdata, sfunc, pop_param_names, priors):
+def logposterior(lambdaa, lambda_dict, data, pop_probs, sdata, sfunc, prior_dict):
 
-	log_prior = logprior(lambdaa, pop_param_names, priors)
+	log_prior = logprior(lambdaa, lambda_dict, prior_dict)
 	
 	if not np.isfinite(log_prior):
 #		print('prior:',lambdaa)
 		return -np.inf
 
 	# (pop prob)(obs likelihood)
-	return log_prior + loglikelihood(lambdaa, data, pop_probs, sdata, sfunc)
+	return log_prior + loglikelihood(lambdaa, lambda_dict, data, pop_probs, sdata, sfunc)
 	
-def loglikelihood(lambdaa, data, pop_probs, sdata, sfunc):
+def loglikelihood(lambdaa, lambda_dict, data, pop_probs, sdata, sfunc):
+
+	pop_param_names = lambda_dict.keys()
+	full_lambda = [lambda_dict[param](lambdaa) for param in pop_param_names]
 
 	log_like = 0.
 	for i in range(len(data)):
@@ -169,15 +186,15 @@ def loglikelihood(lambdaa, data, pop_probs, sdata, sfunc):
 		like_num = 0.
 		for m1,m2,dl in likedata:
 			# (obs likelihood)(pop prob)
-			try: like_num += pop_prob(m1,m2,*lambdaa,*lambdabh)*dfunc(dl,*dparams) # check if the pop model is a NSBH one, and pass it the BH parameters
-			except: like_num += pop_prob(m1,m2,*lambdaa)*dfunc(dl,*dparams) # if the pop model is a BNS one, pass it only the NS parameters
+			try: like_num += pop_prob(m1,m2,*full_lambda,*lambdabh)*dfunc(dl,*dparams) # check if the pop model is a NSBH one, and pass it the BH parameters
+			except: like_num += pop_prob(m1,m2,*full_lambda)*dfunc(dl,*dparams) # if the pop model is a BNS one, pass it only the NS parameters
 		
 		if i == 0 or pop_prob != pop_probs[i-1]:	
 			like_denom = 0.
 			for m1,m2,dl in selectdata:
 				# (select prob)(pop prob)
-				try: like_denom += sfunc(m1,m2,dl)*pop_prob(m1,m2,*lambdaa,*lambdabh)*dfunc(dl,*dparams)
-				except: like_denom += sfunc(m1,m2,dl)*pop_prob(m1,m2,*lambdaa)*dfunc(dl,*dparams)
+				try: like_denom += sfunc(m1,m2,dl)*pop_prob(m1,m2,*full_lambda,*lambdabh)*dfunc(dl,*dparams)
+				except: like_denom += sfunc(m1,m2,dl)*pop_prob(m1,m2,*full_lambda)*dfunc(dl,*dparams)
 		
 		if like_denom <= 0.: print('denom:', lambdaa)
 		if like_num < 0.: print('num:',lambdaa)
@@ -191,8 +208,11 @@ def loglikelihood(lambdaa, data, pop_probs, sdata, sfunc):
 # load population parameter prior samples and initialize emcee walkers
 
 pop_params = np.genfromtxt(args.popparams, names=True, dtype=None, delimiter=args.delim, encoding=None)
-param_names = pop_params.dtype.names
+param_names = list(pop_params.dtype.names)
 num_prior_samps = len(pop_params[param_names[0]])
+assert(set(param_names) == set(pop_param_names)) 
+for param in param_names:
+	if param in fixed_params: param_names.remove(param)
 
 if args.batch: ini_idxs = range(int(args.batch),N_WALKERS+int(args.batch))
 else: ini_idxs = np.random.choice(range(num_prior_samps),N_WALKERS)
@@ -200,7 +220,7 @@ ini_samps = np.array([pop_params[param_name][ini_idxs] for param_name in param_n
 ndims = ini_samps.shape[1] # number of pop params
 
 loglikelihood.ncalls = 0 # initialize likelihood call counter
-argslist = (likesamps,pop_probs,selectsamps,select_func,param_names,args.priors) # arguments to pass to posterior besides pop parameters lambdaa
+argslist = (lambda_dict,likesamps,pop_probs,selectsamps,select_func,prior_dict) # arguments to pass to posterior besides pop parameters lambdaa
 
 sampler = emcee.EnsembleSampler(N_WALKERS, ndims, logposterior, args=argslist)
 
@@ -227,8 +247,18 @@ if args.verbose: print("effective samples per second is {0}".format(ess))
 
 # save population parameters posterior
 
+j = 0
+samples_out = []
+for param in pop_param_names:
+	if param in fixed_params: samples_out += [np.full(len(samples_emcee),fixed_dict[param])]
+	else:
+		samples_out += [samples_emcee[:,j]]
+		j += 1
+
 posts = np.ones((len(samples_emcee),1)) # explicitly print equal weights
-pop_param_samps = np.append(np.array(samples_emcee),np.array(posts),axis=1)
-col_names = param_names_header+',weight'
-np.savetxt(out_path,pop_param_samps[np.isfinite(pop_param_samps).all(axis=1)],header=col_names,comments='',delimiter=',')
+samples_out += [posts]
+
+post_samps = np.column_stack(samples_out)
+col_names = ','.join(pop_param_names)+',weight'
+np.savetxt(out_path,post_samps[np.isfinite(post_samps).all(axis=1)],header=col_names,comments='',delimiter=',')
 

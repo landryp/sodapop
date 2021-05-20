@@ -15,7 +15,8 @@ parser = ArgumentParser(description=__doc__)
 parser.add_argument('popmodel',type=str)
 parser.add_argument('-d', '--delim', help='delimiter for data file, DEFAULT=","', default=',')
 parser.add_argument('-n', '--numsamps', help='number of samples to draw, DEFAULT=1000', default=1000, type=float)
-parser.add_argument('-p', '--priors', help='prior distribution and hyperparameters for each population parameter, DEFAULT="flat,0.,1."', default="flat,0.,1.", type=str, nargs='+')
+parser.add_argument('-p', '--priors', help='prior distribution and hyperparameters for each population parameter, DEFAULT="mmax+flat,0.,1."', default="mmax+flat,0.,1.", type=str, nargs='+')
+parser.add_argument('-F', '--fixed', help='fixed population parameter values (e.g. mmin,1.0), DEFAULT=False', default=False, nargs='+')
 parser.add_argument('-o', '--outpath', help='path for output reweighted samples, DEFAULT=AUTO', default=False)
 parser.add_argument('-v', '--verbose', action='store_true', default=False)
 args = parser.parse_args()
@@ -23,80 +24,65 @@ args = parser.parse_args()
 if args.outpath: out_path = args.outpath
 else: out_path = '{0}_prior.csv'.format(args.popmodel)
 
+prior_keys = []
+param_names = []
+prior_funcs = {}
+hyp_params = {}
+for prior_str in args.priors:
+
+	prior_key = prior_str.split('+')[0]
+	prior_keys += [prior_key]
+	
+	param_names += [item for item in prior_key.split(',')]
+	prior_funcs[prior_key] = (prior_str.split('+')[1]).split(',')[0]
+	hyp_params[prior_key] = [float(val) for val in (prior_str.split('+')[1]).split(',')[1:]]
+
+fixed_param_names = []
+fixed_hyp_params = {}
+if args.fixed:
+	for fixed_str in args.fixed:
+		fixed_param_name, fixed_hyp_param = fixed_str.split(',')
+		fixed_param_names += [fixed_param_name]
+		fixed_hyp_params[fixed_param_name] = float(fixed_hyp_param)
+
+full_param_names = param_names + fixed_param_names
+
 num_samps = int(args.numsamps)
 
 # get population model
 
-param_names = pop.get_pop_params(args.popmodel).split(',')
+pop_param_names = pop.get_pop_params(args.popmodel).split(',')
+
+assert(set(full_param_names) == set(pop_param_names)) # check that prior prescribed for each hyperparameter
 
 # sample from parameter priors
 
-samps = []
-for i,param in enumerate(param_names):
+samps = {}
+for key in prior_keys:
 
-	priordat = args.priors[i].split(',')
-	prior_name = priordat[0]
-	hypparams = priordat[1:]
-	param_samps = params.get_param_samples(num_samps,prior_name,hypparams)
-	samps.append(param_samps)
-
-# ensure mmax parameter > mmin parameter and mu2 parameter > mu1 parameter
-
-if 'mmax' in param_names and 'mmin' in param_names:
-
-	mmaxs = samps[param_names.index('mmax')]
-	mmins = samps[param_names.index('mmin')]
+	key_names = key.split(',')
+	num_names = len(key_names)
 	
-	mmaxs_out = []
-	mmins_out = []
-	for mmax,mmin in zip(mmaxs,mmins):
-	
-		mmaxs_out.append(max(mmax,mmin))
-		mmins_out.append(min(mmax,mmin))
+	grid_list = [params.flat(10000,0.,5.) for i in range(num_names)]
+	unif_grid = [[grid[j] for grid in grid_list] for j in range(10000)]
 
-if 'mu' in param_names:
-
-	mus = samps[param_names.index('mu')]
+	prior_func = params.get_param_prior_func(prior_funcs[key])
+	prior_wts = [prior_func(*grid_pt,*hyp_params[key]) for grid_pt in unif_grid]
 	
-	mus_out = []
-	for mu,mmin,mmax in zip(mus,mmins_out,mmaxs_out):
+	samps_idxs = np.random.choice(range(10000),num_samps,True,prior_wts/np.sum(prior_wts))
 	
-		while mu < mmin or mu > mmax:
-			j = param_names.index('mu')
-			mu = params.get_param_samples(1,args.priors[j].split(',')[0],args.priors[j].split(',')[1:])
+	for i,key_name in enumerate(key_names):
+		samps[key_name] = [unif_grid[k][i] for k in samps_idxs]
 
-		mus_out.append(mu)
-		
-if 'mu1' in param_names and 'mu2' in param_names:
-
-	mu1s = samps[param_names.index('mu1')]
-	mu2s = samps[param_names.index('mu2')]
+for param in fixed_param_names:
+	samps[param] = np.full(num_samps,fixed_hyp_params[param])
 	
-	mu1s_out = []
-	mu2s_out = []
-	for mu1,mu2,mmin,mmax in zip(mu1s,mu2s,mmins_out,mmaxs_out):
-	
-		while mu1 < mmin or mu2 > mmax or mu1 > mu2:
-			j = param_names.index('mu1')
-			k = param_names.index('mu2')
-			mu1 = params.get_param_samples(1,args.priors[j].split(',')[0],args.priors[j].split(',')[1:])
-			mu2 = params.get_param_samples(1,args.priors[k].split(',')[0],args.priors[k].split(',')[1:])
-
-		mu1s_out.append(min(mu1,mu2))
-		mu2s_out.append(max(mu1,mu2))
-		
 samps_out = []
-for i,param in enumerate(param_names):
-
-	if param == 'mmax': samps_out.append(mmaxs_out)
-	elif param == 'mmin': samps_out.append(mmins_out)
-	elif param == 'mu': samps_out.append(mus_out)
-	elif param == 'mu1': samps_out.append(mu1s_out)
-	elif param == 'mu2': samps_out.append(mu2s_out)
-	else: samps_out.append(samps[i])
+for param in pop_param_names:
+	samps_out += [samps[param]]
 
 # save parameter samples
 
 param_samps = np.column_stack(samps_out)
-col_names = pop.get_pop_params(args.popmodel)
+col_names = ','.join(pop_param_names)
 np.savetxt(out_path,param_samps,header=col_names,comments='',delimiter=',')
