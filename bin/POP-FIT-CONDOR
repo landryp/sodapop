@@ -107,7 +107,7 @@ for i,xec in enumerate(execs):
 		outfile.write('error = {0}/{1}.err\n'.format(RUN_PATH,xec))
 		outfile.write('log = {0}/{1}.log\n'.format(RUN_PATH,xec))
 		outfile.write('getenv = True\n')
-		outfile.write('accounting_group = ligo.dev.o3.cbc.pe.lalinference\n')
+		outfile.write('accounting_group = ligo.dev.o3.cbc.bayesianpopulations.parametric\n')
 		outfile.write('accounting_group_user = {0}\n'.format(whoami))
 		outfile.write('queue 1\n')
 
