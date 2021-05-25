@@ -1,0 +1,157 @@
+#!/usr/bin/env python
+
+'BUILD-PPD -- build posterior predictive distribution from posterior population distribution'
+__usage__ = 'build-ppd pop_params_post.csv [-p pop_model1 pop_model2 ... -s select_func -o /path/to/output.csv -S num_select_samps -v]'
+__author__ = 'Philippe Landry (pgjlandry@gmail.com)'
+__date__ = '01-2021'
+
+from argparse import ArgumentParser
+import numpy as np
+import numpy.random
+import os
+import sodapop.populations as pop
+import sodapop.parameters as prm
+import sodapop.priors as pri
+
+parser = ArgumentParser(description=__doc__)
+parser.add_argument('popparams')
+parser.add_argument('-p', '--popmod', help='name of population model, DEFAULT="doublegaussian_m1m2"', default="doublegaussian_m1m2")
+parser.add_argument('-P', '--ppdmod', help='name of population model for ppd, DEFAULT="doublegaussian_mass"', default="doublegaussian_mass")
+parser.add_argument('-D', '--distprior', help='prior distribution for the distance, DEFAULT="quad,0.,1000."', default="quad,0.,1000.")
+parser.add_argument('-B', '--bhpop', help='population parameters for fixed BH mass model, DEFAULT=False', default=False, nargs='+')
+parser.add_argument('-f', '--selfunc', help='name of selection function, DEFAULT=False', default=False)
+parser.add_argument('-S', '--selpriors', help='ranges in m1,m2 and dL for integrating selection function, DEFAULT="0.5,30.,0.5,30.,0.,1000."', default="0.5,30.,0.5,30.,0.,1000.")
+parser.add_argument('-s', '--nsel', help='number of samples to use for integrating selection function, DEFAULT=5000', default=5e3)
+parser.add_argument('-o', '--outpath', help='path for output population parameter samples, DEFAULT=AUTO', default=False)
+parser.add_argument('-d', '--delim', help='delimiter for data file, DEFAULT=","', default=',')
+parser.add_argument('-v', '--verbose', action='store_true', default=False)
+args = parser.parse_args()
+
+###
+
+if args.outpath: out_path = args.outpath
+else: out_path = os.path.dirname(args.popparams)+'/'+args.popmod+'_ppd.csv'
+
+N_SELECT = int(args.nsel)
+
+if args.bhpop: lambdabh = [float(arg) for arg in args.bhpop]
+else: lambdabh = []
+
+MMIN = 1.
+MMAX = 3.
+mgrid = np.arange(MMIN,MMAX,0.02)
+
+###
+
+# get population model and selection function
+
+pop_prob = pop.get_pop_prior(args.popmod)
+ppd_pop_prob = pop.get_pop_prior(args.ppdmod)
+
+pop_param_names = (pop.get_pop_params(args.popmod)).split(',') # get population parameters from first-specified population model, check that they match what's in the prior samples later
+
+if not args.selfunc: select_func = lambda *x : 1.
+elif args.selfunc == 'False': select_func = lambda *x : 1.
+else: select_func = pop.get_select_func(args.selfunc)
+
+dist_shape = (args.distprior).split(',')[0]
+dparams = [float(val) for val in (args.distprior).split(',')[1:]]
+dfunc = prm.get_param_prior_func(dist_shape)
+
+# store population parameters in a dictionary
+
+lambda_dict = {}
+j = 0
+for param in pop_param_names:
+		lambda_dict[param] = lambda x, j=j : x[j]
+		j += 1
+
+# generate uniform m1,m2,dL samples for integrating selection function
+
+selectprior = args.selpriors
+
+m1lb,m1ub,m2lb,m2ub,dllb,dlub = [float(val) for val in (selectprior).split(',')]
+	
+m1_u = np.random.uniform(m1lb,m1ub,N_SELECT)
+m2_u = np.random.uniform(m2lb,m2ub,N_SELECT)
+dl_select = np.random.uniform(dllb,dlub,N_SELECT)
+	
+m1_select = []
+m2_select = []
+for m1u,m2u in zip(m1_u,m2_u):
+	while m1u < m2u:
+		m1u = np.random.uniform(m1lb,m1ub,1)
+		m2u = np.random.uniform(m2lb,m2ub,1)
+			
+	m1_select += [m1u]
+	m2_select += [m2u]
+	
+samps_select = np.array([(m1_select[j],m2_select[j],dl_select[j]) for j in range(N_SELECT)],dtype='f,f,f') # uniform m1,m2,dl samples subject to m1 > m2
+	
+# calculate sensitivity for each population realization
+
+pop_params = np.genfromtxt(args.popparams, names=True, dtype=None, delimiter=args.delim, encoding=None)
+param_names = list(pop_params.dtype.names)[:-1]
+num_post_samps = len(pop_params[param_names[0]])
+
+sensitivities = []
+pads = []
+ppds = []
+
+pop_param_names = lambda_dict.keys()
+
+for line in range(num_post_samps):
+	
+	lambdaa = [lambda_dict[param](pop_params[line]) for param in pop_param_names if param in param_names]
+	full_lambda = lambdaa+lambdabh
+
+	like_denom_sum = [select_func(m1,m2,dl)*pop_prob(m1,m2,*full_lambda)*dfunc(dl,*dparams) for m1,m2,dl in samps_select]
+
+	denom = np.sum(like_denom_sum)/N_SELECT
+	pad_samples = [ppd_pop_prob(m,*lambdaa) for m in mgrid]
+	ppd_samples = [ppd_pop_prob(m,*lambdaa)/denom for m in mgrid] # FIXME: this only works for random pairing, otherwise need ppd_pop_prob(m)*integral(ppd_pop_prob(m)*q^beta+ppd_pop_prob(m)q^-beta)/denom
+	sensitivities += [denom]
+	pads += [pad_samples]
+	ppds += [ppd_samples]
+
+# save population parameters posterior
+
+cols = [pop_params[param] for param in pop_param_names if param in param_names]
+cols += [sensitivities]
+
+lbs = []
+meds = []
+ubs = []
+ppds = np.vstack(ppds)
+for i in range(len(mgrid)):
+	ppd_vals = ppds[:,i]
+	cols += [ppd_vals]
+	
+	meds += [np.quantile(ppd_vals,0.5)]
+	lbs += [np.quantile(ppd_vals,0.05)]
+	ubs += [np.quantile(ppd_vals,0.95)]
+
+samps_out = np.column_stack(cols)
+col_names = ','.join(pop_param_names)+',sensitivity,'+','.join(['m={0:.2f}'.format(m) for m in mgrid])
+np.savetxt(out_path,samps_out[np.isfinite(samps_out).all(axis=1)],header=col_names,comments='',delimiter=',')
+
+quants_out = np.column_stack([mgrid,lbs/np.sum(meds),meds/np.sum(meds),ubs/np.sum(meds)])
+np.savetxt(os.path.dirname(out_path)+'/'+os.path.basename(out_path).split('.')[0]+'_quantiles.csv',quants_out,header='m,lb,med,ub',comments='',delimiter=',')
+
+cols = [pop_params[param] for param in pop_param_names if param in param_names]
+cols += [sensitivities]
+
+lbs = []
+meds = []
+ubs = []
+pads = np.vstack(pads)
+for i in range(len(mgrid)):
+	pad_vals = pads[:,i]
+	cols += [pad_vals]
+	
+	meds += [np.quantile(pad_vals,0.5)]
+	lbs += [np.quantile(pad_vals,0.05)]
+	ubs += [np.quantile(pad_vals,0.95)]
+	
+quants_out = np.column_stack([mgrid,lbs/np.sum(meds),meds/np.sum(meds),ubs/np.sum(meds)])
+np.savetxt(os.path.dirname(out_path)+'/'+os.path.basename(out_path).split('_ppd.')[0]+'_pad_quantiles.csv',quants_out,header='m,lb,med,ub',comments='',delimiter=',')
