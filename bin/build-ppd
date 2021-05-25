@@ -111,8 +111,8 @@ for line in range(num_post_samps):
 	pad_samples = [ppd_pop_prob(m,*lambdaa) for m in mgrid]
 	ppd_samples = [ppd_pop_prob(m,*lambdaa)/denom for m in mgrid] # FIXME: this only works for random pairing, otherwise need ppd_pop_prob(m)*integral(ppd_pop_prob(m)*q^beta+ppd_pop_prob(m)q^-beta)/denom
 	sensitivities += [denom]
-	pads += [pad_samples/np.sum(pad_samples)]
-	ppds += [ppd_samples/np.sum(ppd_samples)]
+	pads += [pad_samples]
+	ppds += [ppd_samples]
 
 # save population parameters posterior
 
