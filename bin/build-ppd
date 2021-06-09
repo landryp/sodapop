@@ -16,7 +16,6 @@ import sodapop.priors as pri
 parser = ArgumentParser(description=__doc__)
 parser.add_argument('popparams')
 parser.add_argument('-p', '--popmod', help='name of population model, DEFAULT="doublegaussian_m1m2"', default="doublegaussian_m1m2")
-parser.add_argument('-P', '--ppdmod', help='name of population model for ppd, DEFAULT="doublegaussian_mass"', default="doublegaussian_mass")
 parser.add_argument('-D', '--distprior', help='prior distribution for the distance, DEFAULT="quad,0.,1000."', default="quad,0.,1000.")
 parser.add_argument('-B', '--bhpop', help='population parameters for fixed BH mass model, DEFAULT=False', default=False, nargs='+')
 parser.add_argument('-f', '--selfunc', help='name of selection function, DEFAULT=False', default=False)
@@ -46,7 +45,6 @@ mgrid = np.arange(MMIN,MMAX,0.02)
 # get population model and selection function
 
 pop_prob = pop.get_pop_prior(args.popmod)
-ppd_pop_prob = pop.get_pop_prior(args.ppdmod)
 
 pop_param_names = (pop.get_pop_params(args.popmod)).split(',') # get population parameters from first-specified population model, check that they match what's in the prior samples later
 
@@ -97,6 +95,10 @@ num_post_samps = len(pop_params[param_names[0]])
 sensitivities = []
 pads = []
 ppds = []
+pads_m1 = []
+pads_m2 = []
+ppds_m1 = []
+ppds_m2 = []
 
 pop_param_names = lambda_dict.keys()
 
@@ -108,11 +110,32 @@ for line in range(num_post_samps):
 	like_denom_sum = [select_func(m1,m2,dl)*pop_prob(m1,m2,*full_lambda)*dfunc(dl,*dparams) for m1,m2,dl in samps_select]
 
 	denom = np.sum(like_denom_sum)/N_SELECT
-	pad_samples = [ppd_pop_prob(m,*lambdaa) for m in mgrid]
-	ppd_samples = [ppd_pop_prob(m,*lambdaa)/denom for m in mgrid] # FIXME: this only works for random pairing, otherwise need ppd_pop_prob(m)*integral(ppd_pop_prob(m)*q^beta+ppd_pop_prob(m)q^-beta)/denom
+	
+	padm1_samples = []
+	padm2_samples = []
+	for m in mgrid:
+		mcsamps_m1 = np.random.uniform(m,m1ub,N_SELECT)
+		mcsamps_m2 = np.random.uniform(m2lb,m,N_SELECT)
+		
+		padm1_sum = [pop_prob(m,m2,*full_lambda)*dfunc(dl,*dparams) for m2,dl in zip(mcsamps_m2,dl_select)]
+		padm2_sum = [pop_prob(m1,m,*full_lambda)*dfunc(dl,*dparams) for m1,dl in zip(mcsamps_m1,dl_select)]
+		
+		padm1_samples += [np.sum(padm1_sum)/N_SELECT]
+		padm2_samples += [np.sum(padm2_sum)/N_SELECT]
+		
+	ppdm1_samples = [padm1/denom for padm1 in padm1_samples]
+	ppdm2_samples = [padm2/denom for padm2 in padm2_samples]
+	
+	pad_samples = [0.5*(padm1+padm2) for padm1,padm2 in zip(padm1_samples,padm2_samples)]
+	ppd_samples = [0.5*(ppdm1+ppdm2) for ppdm1,ppdm2 in zip(ppdm1_samples,ppdm2_samples)] # marginalize over m1,m2 distinction
+	
 	sensitivities += [denom]
 	pads += [pad_samples]
+	pads_m1 += [padm1_samples]
+	pads_m2 += [padm2_samples]
 	ppds += [ppd_samples]
+	ppds_m1 += [ppdm1_samples]
+	ppds_m2 += [ppdm2_samples]
 
 # save population parameters posterior
 
