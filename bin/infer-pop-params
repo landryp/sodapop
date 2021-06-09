@@ -81,7 +81,7 @@ for prior_str in args.priors:
 fixed_dict = {}
 fixed_params = []
 fixed_vals = []
-if args.fixed:
+if args.fixed and args.fixed != 'False':
 	fixed_params = [fixed_str.split(',')[0] for fixed_str in args.fixed]
 	fixed_vals = [fixed_str.split(',')[1] for fixed_str in args.fixed]
 	for i,fixed_param in enumerate(fixed_params):
