@@ -50,7 +50,7 @@ N_LIKES = int(args.nlike)
 
 if args.verbose: print('walkers: {0}, burn in: {1}, target posterior samples: {2}, likelihood samples: {3}, selection effect samples: {4}'.format(N_WALKERS,N_BURNIN,N_POSTS,N_LIKES,N_SELECT))
 
-lambdabh = args.bhpop
+lambdabh = [float(bhparam) for bhparam in args.bhpop]
 
 ###
 
