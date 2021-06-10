@@ -66,7 +66,7 @@ N_POST_PER_JOB = int(1+N_POST/N_WALKERS_PER_JOB)
 PRIOR_OUTPATH = OUTDIR+'/'+MAIN_POP_MOD+'_prior.csv'
 POST_OUTPATH = OUTDIR+'/'+MAIN_POP_MOD+'.csv'
 
-if args.fixed:
+if args.fixed and args.fixed != 'False':
 	fixed_out = ' '.join(args.fixed)
 	fixed_str = '+'.join(args.fixed)
 else:
