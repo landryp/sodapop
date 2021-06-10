@@ -29,7 +29,7 @@ args = parser.parse_args()
 ###
 
 if args.outpath: out_path = args.outpath
-else: out_path = os.path.dirname(args.popparams)+'/'+args.popmod+'_ppd.csv'
+else: out_path = os.path.dirname(args.popparams)+'/'+args.popmod[0]+'_ppd.csv'
 
 N_SELECT = int(args.nsel)
 
@@ -46,7 +46,7 @@ mgrid = np.arange(MMIN,MMAX,0.02)
 
 pop_probs = pop.get_pop_prior(args.popmod)
 
-pop_param_names = (pop.get_pop_params(args.popmod)).split(',') # get population parameters from first-specified population model, check that they match what's in the prior samples later
+pop_param_names = (pop.get_pop_params(args.popmod[0])).split(',') # get population parameters from first-specified population model, check that they match what's in the prior samples later
 
 if not args.selfunc: select_func = lambda *x : 1.
 elif args.selfunc == 'False': select_func = lambda *x : 1.
