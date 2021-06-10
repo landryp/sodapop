@@ -39,7 +39,7 @@ for prior_str in args.priors:
 
 fixed_param_names = []
 fixed_hyp_params = {}
-if args.fixed and args.fixed != 'False':
+if args.fixed and args.fixed != ['False']:
 	for fixed_str in args.fixed:
 		fixed_param_name, fixed_hyp_param = fixed_str.split(',')
 		fixed_param_names += [fixed_param_name]
