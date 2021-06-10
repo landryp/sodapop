@@ -44,7 +44,7 @@ mgrid = np.arange(MMIN,MMAX,0.02)
 
 # get population model and selection function
 
-pop_probs = pop.get_pop_prior(args.popmod)
+pop_probs = [pop.get_pop_prior(popmod) for popmod in args.popmod]
 
 pop_param_names = (pop.get_pop_params(args.popmod[0])).split(',') # get population parameters from first-specified population model, check that they match what's in the prior samples later
 
