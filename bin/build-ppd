@@ -89,7 +89,7 @@ samps_select = np.array([(m1_select[j],m2_select[j],dl_select[j]) for j in range
 # calculate sensitivity for each population realization
 
 pop_params = np.genfromtxt(args.popparams, names=True, dtype=None, delimiter=args.delim, encoding=None)
-param_names = list(pop_params.dtype.names)[:-1]
+param_names = list(pop_params.dtype.names)[:-2]
 num_post_samps = len(pop_params[param_names[0]])
 
 sensitivities = []
@@ -105,18 +105,20 @@ pop_param_names = lambda_dict.keys()
 for line in range(num_post_samps):
 	
 	lambdaa = [lambda_dict[param](pop_params[line]) for param in pop_param_names if param in param_names]
-	
-	denom = 0.
-	for m1,m2,dl in samps_select:
-		if m1 > lambdabh[-2]:
-			pop_prob = pop_probs[-1] # nsbh likelihoods assumed to come last, if present
-			denom += select_func(m1,m2,dl)*pop_prob(m1,m2,*lambdaa,*lambdabh)*dfunc(dl,*dparams)
-		else:
-			pop_prob = pop_probs[0] # bns likelihoods assumed to come first
-			denom += select_func(m1,m2,dl)*pop_prob(m1,m2,*lambdaa)*dfunc(dl,*dparams)
-	if denom <= 0.: print('denom:', lambdaa)
 
-	denom = denom/N_SELECT
+	denom = np.exp(pop_params[line][-2]) # expects sensitivity as 2nd-last col
+		
+#	denom = 0.
+#	for m1,m2,dl in samps_select:
+#		if m1 > lambdabh[-2]:
+#			pop_prob = pop_probs[-1] # nsbh likelihoods assumed to come last, if present
+#			denom += select_func(m1,m2,dl)*pop_prob(m1,m2,*lambdaa,*lambdabh)*dfunc(dl,*dparams)
+#		else:
+#			pop_prob = pop_probs[0] # bns likelihoods assumed to come first
+#			denom += select_func(m1,m2,dl)*pop_prob(m1,m2,*lambdaa)*dfunc(dl,*dparams)
+#	if denom <= 0.: print('denom:', lambdaa)
+
+#	denom = denom/N_SELECT
 	
 	padm1_samples = []
 	padm2_samples = []

@@ -96,6 +96,8 @@ for param in pop_param_names:
 		lambda_dict[param] = lambda x, j=j : x[j]
 		j += 1
 
+sensitivity_dict = {}
+
 # load likelihood samples
 
 if args.verbose: print('Loading likelihood data...')
@@ -209,6 +211,8 @@ def loglikelihood(lambdaa, lambda_dict, data, pop_probs, sdata, sfunc):
 	if not np.isfinite(log_like):
 		return -np.inf
 
+	sensitivity_dict[','.join([str(l) for l in lambdaa])] = np.log(like_denom)
+
 	return log_like
 
 # load population parameter prior samples and initialize emcee walkers
@@ -261,10 +265,14 @@ for param in pop_param_names:
 		samples_out += [samples_emcee[:,j]]
 		j += 1
 
+sensitivities = []		
+for sample in samples_emcee:
+	sensitivities += [sensitivity_dict[','.join([str(l) for l in sample])]]
+
 posts = np.ones((len(samples_emcee),1)) # explicitly print equal weights
-samples_out += [posts]
+samples_out += [sensitivities,posts]
 
 post_samps = np.column_stack(samples_out)
-col_names = ','.join(pop_param_names)+',weight'
+col_names = ','.join(pop_param_names)+',log_sensitivity,weight'
 np.savetxt(out_path,post_samps[np.isfinite(post_samps).all(axis=1)],header=col_names,comments='',delimiter=',')
 
