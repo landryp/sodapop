@@ -15,7 +15,7 @@ import sodapop.priors as pri
 
 parser = ArgumentParser(description=__doc__)
 parser.add_argument('popparams')
-parser.add_argument('-p', '--popmod', help='name of population model, DEFAULT="doublegaussian_m1m2"', default="doublegaussian_m1m2")
+parser.add_argument('-p', '--popmod', help='name of population model, DEFAULT="doublegaussian_m1m2"', default=["doublegaussian_m1m2","doublegaussian_m1m2"], nargs=2)
 parser.add_argument('-D', '--distprior', help='prior distribution for the distance, DEFAULT="quad,0.,1000."', default="quad,0.,1000.")
 parser.add_argument('-B', '--bhpop', help='population parameters for fixed BH mass model, DEFAULT=False', default=False, nargs='+')
 parser.add_argument('-f', '--selfunc', help='name of selection function, DEFAULT=False', default=False)
@@ -44,7 +44,7 @@ mgrid = np.arange(MMIN,MMAX,0.02)
 
 # get population model and selection function
 
-pop_prob = pop.get_pop_prior(args.popmod)
+pop_probs = pop.get_pop_prior(args.popmod)
 
 pop_param_names = (pop.get_pop_params(args.popmod)).split(',') # get population parameters from first-specified population model, check that they match what's in the prior samples later
 
@@ -105,11 +105,18 @@ pop_param_names = lambda_dict.keys()
 for line in range(num_post_samps):
 	
 	lambdaa = [lambda_dict[param](pop_params[line]) for param in pop_param_names if param in param_names]
-	full_lambda = lambdaa+lambdabh
+	
+	denom = 0.
+	for m1,m2,dl in samps_select:
+		if m1 > lambdabh[-2]:
+			pop_prob = pop_probs[-1] # nsbh likelihoods assumed to come last, if present
+			denom += sfunc(m1,m2,dl)*pop_prob(m1,m2,*full_lambda,*lambdabh)*dfunc(dl,*dparams)
+		else:
+			pop_prob = pop_probs[0] # bns likelihoods assumed to come first
+			denom += sfunc(m1,m2,dl)*pop_prob(m1,m2,*full_lambda)*dfunc(dl,*dparams)
+	if denom <= 0.: print('denom:', lambdaa)
 
-	like_denom_sum = [select_func(m1,m2,dl)*pop_prob(m1,m2,*full_lambda)*dfunc(dl,*dparams) for m1,m2,dl in samps_select]
-
-	denom = np.sum(like_denom_sum)/N_SELECT
+	denom = denom/N_SELECT
 	
 	padm1_samples = []
 	padm2_samples = []
