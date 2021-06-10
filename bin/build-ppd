@@ -110,10 +110,10 @@ for line in range(num_post_samps):
 	for m1,m2,dl in samps_select:
 		if m1 > lambdabh[-2]:
 			pop_prob = pop_probs[-1] # nsbh likelihoods assumed to come last, if present
-			denom += select_func(m1,m2,dl)*pop_prob(m1,m2,*full_lambda,*lambdabh)*dfunc(dl,*dparams)
+			denom += select_func(m1,m2,dl)*pop_prob(m1,m2,*lambdaa,*lambdabh)*dfunc(dl,*dparams)
 		else:
 			pop_prob = pop_probs[0] # bns likelihoods assumed to come first
-			denom += select_func(m1,m2,dl)*pop_prob(m1,m2,*full_lambda)*dfunc(dl,*dparams)
+			denom += select_func(m1,m2,dl)*pop_prob(m1,m2,*lambdaa)*dfunc(dl,*dparams)
 	if denom <= 0.: print('denom:', lambdaa)
 
 	denom = denom/N_SELECT
@@ -124,8 +124,8 @@ for line in range(num_post_samps):
 		mcsamps_m1 = np.random.uniform(m,m1ub,N_SELECT)
 		mcsamps_m2 = np.random.uniform(m2lb,m,N_SELECT)
 		
-		padm1_sum = [pop_prob(m,m2,*full_lambda)*dfunc(dl,*dparams) for m2,dl in zip(mcsamps_m2,dl_select)]
-		padm2_sum = [pop_prob(m1,m,*full_lambda)*dfunc(dl,*dparams) for m1,dl in zip(mcsamps_m1,dl_select)]
+		padm1_sum = [pop_prob(m,m2,*lambdaa)*dfunc(dl,*dparams) for m2,dl in zip(mcsamps_m2,dl_select)]
+		padm2_sum = [pop_prob(m1,m,*lambdaa)*dfunc(dl,*dparams) for m1,dl in zip(mcsamps_m1,dl_select)]
 		
 		padm1_samples += [np.sum(padm1_sum)/N_SELECT]
 		padm2_samples += [np.sum(padm2_sum)/N_SELECT]
