@@ -15,11 +15,11 @@ import sodapop.priors as pri
 
 parser = ArgumentParser(description=__doc__)
 parser.add_argument('popparams')
-parser.add_argument('-p', '--popmod', help='name of population model, DEFAULT="doublegaussian_m1m2"', default=["doublegaussian_m1m2","doublegaussian_m1m2"], nargs=2)
+parser.add_argument('-p', '--popmod', help='name of population model, DEFAULT="doublegaussian_m1m2"', default="doublegaussian_m1m2")
 parser.add_argument('-D', '--distprior', help='prior distribution for the distance, DEFAULT="quad,0.,1000."', default="quad,0.,1000.")
 parser.add_argument('-B', '--bhpop', help='population parameters for fixed BH mass model, DEFAULT=False', default=False, nargs='+')
-parser.add_argument('-f', '--selfunc', help='name of selection function, DEFAULT=False', default=False)
-parser.add_argument('-S', '--selpriors', help='ranges in m1,m2 and dL for integrating selection function, DEFAULT="0.5,30.,0.5,30.,0.,1000."', default="0.5,30.,0.5,30.,0.,1000.")
+#parser.add_argument('-f', '--selfunc', help='name of selection function, DEFAULT=False', default=False)
+#parser.add_argument('-S', '--selpriors', help='ranges in m1,m2 and dL for integrating selection function, DEFAULT="0.5,30.,0.5,30.,0.,1000."', default="0.5,30.,0.5,30.,0.,1000.")
 parser.add_argument('-s', '--nsel', help='number of samples to use for integrating selection function, DEFAULT=5000', default=5e3)
 parser.add_argument('-o', '--outpath', help='path for output population parameter samples, DEFAULT=AUTO', default=False)
 parser.add_argument('-d', '--delim', help='delimiter for data file, DEFAULT=","', default=',')
@@ -29,7 +29,7 @@ args = parser.parse_args()
 ###
 
 if args.outpath: out_path = args.outpath
-else: out_path = os.path.dirname(args.popparams)+'/'+args.popmod[0]+'_ppd.csv'
+else: out_path = os.path.dirname(args.popparams)+'/'+args.popmod+'_ppd.csv'
 
 N_SELECT = int(args.nsel)
 
@@ -44,13 +44,13 @@ mgrid = np.arange(MMIN,MMAX,0.02)
 
 # get population model and selection function
 
-pop_probs = [pop.get_pop_prior(popmod) for popmod in args.popmod]
+pop_probs = pop.get_pop_prior(args.popmod)
 
-pop_param_names = (pop.get_pop_params(args.popmod[0])).split(',') # get population parameters from first-specified population model, check that they match what's in the prior samples later
+pop_param_names = (pop.get_pop_params(args.popmod)).split(',') # get population parameters from first-specified population model, check that they match what's in the prior samples later
 
-if not args.selfunc: select_func = lambda *x : 1.
-elif args.selfunc == 'False': select_func = lambda *x : 1.
-else: select_func = pop.get_select_func(args.selfunc)
+#if not args.selfunc: select_func = lambda *x : 1.
+#elif args.selfunc == 'False': select_func = lambda *x : 1.
+#else: select_func = pop.get_select_func(args.selfunc)
 
 dist_shape = (args.distprior).split(',')[0]
 dparams = [float(val) for val in (args.distprior).split(',')[1:]]
@@ -66,25 +66,25 @@ for param in pop_param_names:
 
 # generate uniform m1,m2,dL samples for integrating selection function
 
-selectprior = args.selpriors
+#selectprior = args.selpriors
 
-m1lb,m1ub,m2lb,m2ub,dllb,dlub = [float(val) for val in (selectprior).split(',')]
+#m1lb,m1ub,m2lb,m2ub,dllb,dlub = [float(val) for val in (selectprior).split(',')]
 	
-m1_u = np.random.uniform(m1lb,m1ub,N_SELECT)
-m2_u = np.random.uniform(m2lb,m2ub,N_SELECT)
-dl_select = np.random.uniform(dllb,dlub,N_SELECT)
+#m1_u = np.random.uniform(m1lb,m1ub,N_SELECT)
+#m2_u = np.random.uniform(m2lb,m2ub,N_SELECT)
+#dl_select = np.random.uniform(dllb,dlub,N_SELECT)
 	
-m1_select = []
-m2_select = []
-for m1u,m2u in zip(m1_u,m2_u):
-	while m1u < m2u:
-		m1u = np.random.uniform(m1lb,m1ub,1)
-		m2u = np.random.uniform(m2lb,m2ub,1)
+#m1_select = []
+#m2_select = []
+#for m1u,m2u in zip(m1_u,m2_u):
+#	while m1u < m2u:
+#		m1u = np.random.uniform(m1lb,m1ub,1)
+#		m2u = np.random.uniform(m2lb,m2ub,1)
 			
-	m1_select += [m1u]
-	m2_select += [m2u]
+#	m1_select += [m1u]
+#	m2_select += [m2u]
 	
-samps_select = np.array([(m1_select[j],m2_select[j],dl_select[j]) for j in range(N_SELECT)],dtype='f,f,f') # uniform m1,m2,dl samples subject to m1 > m2
+#samps_select = np.array([(m1_select[j],m2_select[j],dl_select[j]) for j in range(N_SELECT)],dtype='f,f,f') # uniform m1,m2,dl samples subject to m1 > m2
 	
 # calculate sensitivity for each population realization
 
