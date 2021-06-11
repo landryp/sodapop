@@ -44,7 +44,7 @@ mgrid = np.arange(MMIN,MMAX,0.02)
 
 # get population model and selection function
 
-pop_probs = pop.get_pop_prior(args.popmod)
+pop_prob = pop.get_pop_prior(args.popmod)
 
 pop_param_names = (pop.get_pop_params(args.popmod)).split(',') # get population parameters from first-specified population model, check that they match what's in the prior samples later
 
@@ -103,6 +103,8 @@ ppds_m2 = []
 pop_param_names = lambda_dict.keys()
 
 for line in range(num_post_samps):
+
+	if args.verbose: print(line)
 	
 	lambdaa = [lambda_dict[param](pop_params[line]) for param in pop_param_names if param in param_names]
 
