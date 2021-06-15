@@ -177,6 +177,9 @@ def loglikelihood(lambdaa, lambda_dict, data, pop_probs, sdata, sfunc):
 
 	full_lambda = [lambda_dict[param](lambdaa) for param in lambda_dict.keys()]
 
+	sensitivity_dict[','.join([str(l) for l in lambdaa])] = -np.inf
+	likelihood_dict[','.join([str(l) for l in lambdaa])] = -np.inf
+
 	log_like = 0.
 	for i in range(len(data)):
 		likedata = data[i]
@@ -229,7 +232,7 @@ for param in param_names:
 	if param in fixed_params: param_names.remove(param)
 
 if args.batch: ini_idxs = range(int(args.batch),N_WALKERS+int(args.batch))
-else: ini_idxs = np.random.choice(range(num_prior_samps),N_WALKERS)
+else: ini_idxs = np.random.choice(range(num_prior_samps),N_WALKERS,replace=False)
 ini_samps = np.array([pop_params[param_name][ini_idxs] for param_name in param_names]).T
 ndims = ini_samps.shape[1] # number of pop params
 
