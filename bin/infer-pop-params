@@ -97,6 +97,7 @@ for param in pop_param_names:
 		j += 1
 
 sensitivity_dict = {}
+likelihood_dict = {}
 
 # load likelihood samples
 
@@ -145,12 +146,10 @@ for selectprior in args.selpriors:
 	
 # load population parameter prior
 
-def logprior(lambdaa, lambda_dict, prior_dict):
-
-	prior_keys = prior_dict.keys()
+def logprior(lambdaa, lambda_dict, prior_dict): 
 	
 	logpriors = []
-	for prior_key in prior_keys:
+	for prior_key in prior_dict.keys():
 	
 		prior_func, hyp_params = prior_dict[prior_key]
 		short_lambda = [lambda_dict[param](lambdaa) for param in prior_key.split(',')]
@@ -176,8 +175,7 @@ def logposterior(lambdaa, lambda_dict, data, pop_probs, sdata, sfunc, prior_dict
 	
 def loglikelihood(lambdaa, lambda_dict, data, pop_probs, sdata, sfunc):
 
-	pop_param_names = lambda_dict.keys()
-	full_lambda = [lambda_dict[param](lambdaa) for param in pop_param_names]
+	full_lambda = [lambda_dict[param](lambdaa) for param in lambda_dict.keys()]
 
 	log_like = 0.
 	for i in range(len(data)):
@@ -194,7 +192,7 @@ def loglikelihood(lambdaa, lambda_dict, data, pop_probs, sdata, sfunc):
 			for m1,m2,dl in likedata:
 				like_num += pop_prob(m1,m2,*full_lambda,*lambdabh)*dfunc(dl,*dparams) # check if the pop model is a NSBH one, and pass it the BH parameters
 		
-		if like_num < 0.: print('num:',lambdaa)
+#		if like_num < 0.: print('num:',lambdaa)
 		log_like += np.log(like_num)
 		
 		if not np.isfinite(log_like):
@@ -210,13 +208,14 @@ def loglikelihood(lambdaa, lambda_dict, data, pop_probs, sdata, sfunc):
 			pop_prob = pop_probs[0] # bns likelihoods assumed to come first
 			like_denom += sfunc(m1,m2,dl)*pop_prob(m1,m2,*full_lambda)*dfunc(dl,*dparams)
 			
-	if like_denom <= 0.: print('denom:', lambdaa)
+#	if like_denom <= 0.: print('denom:', lambdaa)
 	log_like -= np.log(like_denom)
 	
 	if not np.isfinite(log_like):
 		return -np.inf
 
 	sensitivity_dict[','.join([str(l) for l in lambdaa])] = np.log(like_denom)
+	likelihood_dict[','.join([str(l) for l in lambdaa])] = log_like
 
 	return log_like
 
@@ -270,14 +269,16 @@ for param in pop_param_names:
 		samples_out += [samples_emcee[:,j]]
 		j += 1
 
+lhoods = []
 sensitivities = []		
 for sample in samples_emcee:
 	sensitivities += [sensitivity_dict[','.join([str(l) for l in sample])]]
+	lhoods += [likelihood_dict[','.join([str(l) for l in sample])]]
 
 posts = np.ones((len(samples_emcee),1)) # explicitly print equal weights
-samples_out += [sensitivities,posts]
+samples_out += [lhoods,sensitivities,posts]
 
 post_samps = np.column_stack(samples_out)
-col_names = ','.join(pop_param_names)+',log_sensitivity,weight'
+col_names = ','.join(pop_param_names)+',log_likelihood,log_sensitivity,weight'
 np.savetxt(out_path,post_samps[np.isfinite(post_samps).all(axis=1)],header=col_names,comments='',delimiter=',')
 
