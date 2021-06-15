@@ -188,7 +188,7 @@ for i in range(len(mgrid)):
 	ubs += [np.quantile(pad_vals,0.95)]
 
 samps_out = np.column_stack(cols)
-col_names = ','.join(pop_param_names)+','.join(['m={0:.2f}'.format(m) for m in mgrid])
+col_names = ','.join(pop_param_names)+','+','.join(['m={0:.2f}'.format(m) for m in mgrid])
 np.savetxt(os.path.dirname(out_path)+'/'+os.path.basename(out_path).split('_ppd.')[0]+'_pad.csv',samps_out[np.isfinite(samps_out).all(axis=1)],header=col_names,comments='',delimiter=',')
 
 norm = np.trapz(meds,mgrid)
