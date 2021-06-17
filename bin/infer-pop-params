@@ -176,6 +176,8 @@ def logposterior(lambdaa, lambda_dict, data, pop_probs, sdata, sfunc, prior_dict
 def loglikelihood(lambdaa, lambda_dict, data, pop_probs, sdata, sfunc):
 
 	full_lambda = [lambda_dict[param](lambdaa) for param in lambda_dict.keys()]
+	if 'beta' in lambda_dict.keys(): alt_lambda = full_lambda[:-1]
+	else: alt_lambda = full_lambda
 
 	sensitivity_dict[','.join([str(l) for l in lambdaa])] = -np.inf
 	likelihood_dict[','.join([str(l) for l in lambdaa])] = -np.inf
@@ -193,7 +195,7 @@ def loglikelihood(lambdaa, lambda_dict, data, pop_probs, sdata, sfunc):
 			
 		elif pop_prob == pop_probs[-1]: # nsbh likelihoods assumed to come last, if present
 			for m1,m2,dl in likedata:
-				like_num += pop_prob(m1,m2,*full_lambda,*lambdabh)*dfunc(dl,*dparams) # check if the pop model is a NSBH one, and pass it the BH parameters
+				like_num += pop_prob(m1,m2,*alt_lambda,*lambdabh)*dfunc(dl,*dparams) # check if the pop model is a NSBH one, and pass it the BH parameters
 		
 #		if like_num < 0.: print('num:',lambdaa)
 		log_like += np.log(like_num)
