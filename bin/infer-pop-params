@@ -208,7 +208,7 @@ def loglikelihood(lambdaa, lambda_dict, data, pop_probs, sdata, sfunc):
 	for m1,m2,dl in selectdata:
 		if m1 > lambdabh[-2]:
 			pop_prob = pop_probs[-1] # nsbh likelihoods assumed to come last, if present
-			like_denom += sfunc(m1,m2,dl)*pop_prob(m1,m2,*full_lambda,*lambdabh)*dfunc(dl,*dparams)
+			like_denom += sfunc(m1,m2,dl)*pop_prob(m1,m2,*alt_lambda,*lambdabh)*dfunc(dl,*dparams)
 		else:
 			pop_prob = pop_probs[0] # bns likelihoods assumed to come first
 			like_denom += sfunc(m1,m2,dl)*pop_prob(m1,m2,*full_lambda)*dfunc(dl,*dparams)
