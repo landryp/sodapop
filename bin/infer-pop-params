@@ -214,7 +214,7 @@ def loglikelihood(lambdaa, lambda_dict, data, pop_probs, sdata, sfunc):
 			like_denom += sfunc(m1,m2,dl)*pop_prob(m1,m2,*full_lambda)*dfunc(dl,*dparams)
 			
 #	if like_denom <= 0.: print('denom:', lambdaa)
-	log_like -= np.log(like_denom)
+	log_like -= len(data)*np.log(like_denom)
 	
 	if not np.isfinite(log_like):
 		return -np.inf
