@@ -75,7 +75,7 @@ wts = wts/np.sum(wts)
 
 cols_list = args.col
 
-kde = gaussian_kde(np.vstack([postdat[col] for col in cols_list]))
+kde = gaussian_kde(np.vstack([postdat[col] for col in cols_list]),weights=wts)
 
 mins = []
 maxs = []
@@ -95,8 +95,8 @@ print(mode_params)
 
 full_qs = []
 for col in cols_list:
-	samps_equal_wt = postdat[col] # specialize to equal-weight posterior samples
-#	samps_equal_wt = np.random.choice(samps,size=int(args.numsamps),p=wts)
+#	samps_equal_wt = postdat[col] # specialize to equal-weight posterior samples
+	samps_equal_wt = np.random.choice(postdat[col],size=len(postdat[col]),p=wts)
 #	samps_equal_wt = [samp for samp in samps_equal_wt if not np.isinf(samp)]
 
 	q_dat = [col]
