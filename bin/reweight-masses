@@ -17,6 +17,7 @@ parser.add_argument('-c', '--cols', help='name of mass1, mass2 and distance data
 parser.add_argument('-p', '--oldprior', help='name of original prior distribution, DEFAULT="flat_m1m2det"', default="flat_m1m2det", type=str)
 parser.add_argument('-r', '--newprior', help='name of desired prior distribution for reweighted samples, DEFAULT="flat_m1m2"', default="flat_m1m2", type=str)
 parser.add_argument('-o', '--outpath', help='path for output reweighted samples, DEFAULT=AUTO', default=False)
+parser.add_argument('-m','--maxsamps', help='maximum number of samples to save, DEFAULT=None', default=False)
 parser.add_argument('-v', '--verbose', action='store_true', default=False)
 args = parser.parse_args()
 
@@ -37,6 +38,13 @@ if args.verbose: print(cols)
 m1s = post_data[args.cols[0]]
 m2s = post_data[args.cols[1]]
 dLs = post_data[args.cols[2]]
+
+if args.maxsamps:
+
+	idxs = np.random.choice(range(len(m1s)),int(args.maxsamps),False)
+	m1s = [m1s[idx] for idx in idxs]
+	m2s = [m2s[idx] for idx in idxs]
+	dLs = [dLs[idx] for idx in idxs]
 
 post_samps = list(zip(m1s,m2s,dLs))
 num_samps = len(m1s)
