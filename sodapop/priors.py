@@ -72,7 +72,7 @@ def flat_mcqdet(m1,m2,dL): # flat in chirp mass and mass ratio, assuming flat pr
 
 ### PRIOR LOOKUP FUNCTIONS
     
-binary_mass_priors = {'flat_m1m2': flat_m1m2, 'flat_m1m2det': flat_m1m2det, 'flat_mceta': flat_mceta, 'flat_mcetadet': flat_mcetadet, 'flat_m1m2det_quad_dL': flat_m1m2det_quad_dL, 'flat_m1m2_quad_dL': flat_m1m2_quad_dL}
+binary_mass_priors = {'flat_m1m2': flat_m1m2, 'flat_m1m2det': flat_m1m2det, 'flat_mceta': flat_mceta, 'flat_mcetadet': flat_mcetadet, 'flat_m1m2det_quad_dL': flat_m1m2det_quad_dL, 'flat_m1m2_quad_dL': flat_m1m2_quad_dL, 'flat_mcq': flat_mcq , 'flat_mcqdet': flat_mcqdet}
 
 def get_binary_mass_prior(key):
 
