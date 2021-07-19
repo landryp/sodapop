@@ -51,10 +51,24 @@ def flat_mceta(m1,m2,dL): # flat in chirp mass and symmetric mass ratio
 
 def flat_mcetadet(m1,m2,dL): # flat in chirp mass and symmetric mass ratio, assuming flat prior in dL
     
-    if m1 < m2: val = 0.
-    else: val = (1.+dL_to_z(dL))**2*(m1-m2)*(m1*m2)**0.6/(m1+m2)**3.2
+	if m1 < m2: val = 0.
+	else: val = (1.+dL_to_z(dL))**2*(m1-m2)*(m1*m2)**0.6/(m1+m2)**3.2
     
-    return val
+	return val
+    
+def flat_mcq(m1,m2,dL): # flat in chirp mass and mass ratio
+    
+	if m1 < m2: val = 0.
+	else: val = (m1*m2)**0.6/(m1**2*(m1+m2)**0.2)
+    
+	return val
+
+def flat_mcqdet(m1,m2,dL): # flat in chirp mass and mass ratio, assuming flat prior in dL
+    
+	if m1 < m2: val = 0.
+	else: val = (1.+dL_to_z(dL))*(m1*m2)**0.6/(m1**2*(m1+m2)**0.2)
+    
+	return val
 
 ### PRIOR LOOKUP FUNCTIONS
     
