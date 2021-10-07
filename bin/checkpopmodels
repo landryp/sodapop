@@ -1,0 +1,103 @@
+#!/usr/bin/python
+
+import numpy as np
+from scipy.stats import gaussian_kde
+import pandas as pd
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+import sys
+sys.path.insert(0,'/home/philippe.landry/sodapop-o3')
+import sodapop.populations
+
+NUMPTS = 10000
+
+mgrid = np.arange(1.,3.,0.01)
+m1m2grid = []
+for m1 in mgrid:
+    for m2 in mgrid:
+        m1m2grid += [(m1,m2)]
+
+m1m2grid = np.array(m1m2grid)
+
+###
+
+POPMODEL = sodapop.populations.unif_m1m2
+POPPARAMS = (1.,3.)
+
+pop_wts = POPMODEL(m1m2grid[:,0],m1m2grid[:,1],POPPARAMS)
+idxs = np.random.choice(range(len(m1m2grid)),NUMPTS,True,pop_wts/np.sum(pop_wts))
+pop_samps = m1m2grid[idxs]
+
+plt.figure(figsize=(8.,9.))
+
+dataframe = pd.DataFrame(pop_samps)
+
+fig = sns.pairplot(dataframe, kind='kde', diag_kind='kde', corner=True, plot_kws=dict(levels=[0.1,0.5],common_norm=False), diag_kws=dict(lw=1,common_norm=False))
+plt.savefig('/home/phil/Research/sodapop-o3/unif.png')
+
+plt.figure(figsize=(8.,9.))
+plt.hist(pop_samps.reshape(-1),histtype='step',density=True,bins=20)
+plt.savefig('/home/phil/Research/sodapop-o3/unif_distrib.png')
+
+###
+
+POPMODEL = sodapop.populations.bimodcut_m1m2
+POPPARAMS = (1.3,0.04,1.7,0.1,0.4,1.,3.)
+
+pop_wts = POPMODEL(m1m2grid[:,0],m1m2grid[:,1],POPPARAMS)
+idxs = np.random.choice(range(len(m1m2grid)),NUMPTS,True,pop_wts/np.sum(pop_wts))
+pop_samps = m1m2grid[idxs]
+
+plt.figure(figsize=(8.,9.))
+
+dataframe = pd.DataFrame(pop_samps)
+
+fig = sns.pairplot(dataframe, kind='kde', diag_kind='kde', corner=True, plot_kws=dict(levels=[0.1,0.5],common_norm=False), diag_kws=dict(lw=1,common_norm=False))
+plt.savefig('/home/phil/Research/sodapop-o3/bimod.png')
+
+plt.figure(figsize=(8.,9.))
+plt.hist(pop_samps.reshape(-1),histtype='step',density=True,bins=20)
+plt.savefig('/home/phil/Research/sodapop-o3/bimod_distrib.png')
+
+###
+
+POPMODEL = sodapop.populations.peakcut_m1m2
+POPPARAMS = (1.3,0.2,1.,3.)
+
+pop_wts = POPMODEL(m1m2grid[:,0],m1m2grid[:,1],POPPARAMS)
+idxs = np.random.choice(range(len(m1m2grid)),NUMPTS,True,pop_wts/np.sum(pop_wts))
+pop_samps = m1m2grid[idxs]
+
+plt.figure(figsize=(8.,9.))
+
+dataframe = pd.DataFrame(pop_samps)
+
+fig = sns.pairplot(dataframe, kind='kde', diag_kind='kde', corner=True, plot_kws=dict(levels=[0.1,0.5],common_norm=False), diag_kws=dict(lw=1,common_norm=False))
+plt.savefig('/home/phil/Research/sodapop-o3/peak.png')
+
+plt.figure(figsize=(8.,9.))
+plt.hist(pop_samps.reshape(-1),histtype='step',density=True,bins=20)
+plt.savefig('/home/phil/Research/sodapop-o3/peak_distrib.png')
+
+###
+
+POPMODEL = sodapop.populations.power_m1m2
+POPPARAMS = (-1.3,1.,3.)
+
+pop_wts = POPMODEL(m1m2grid[:,0],m1m2grid[:,1],POPPARAMS)
+idxs = np.random.choice(range(len(m1m2grid)),NUMPTS,True,pop_wts/np.sum(pop_wts))
+pop_samps = m1m2grid[idxs]
+
+plt.figure(figsize=(8.,9.))
+
+dataframe = pd.DataFrame(pop_samps)
+
+fig = sns.pairplot(dataframe, kind='kde', diag_kind='kde', corner=True, plot_kws=dict(levels=[0.1,0.5],common_norm=False), diag_kws=dict(lw=1,common_norm=False))
+plt.savefig('/home/phil/Research/sodapop-o3/power.png')
+
+plt.figure(figsize=(8.,9.))
+plt.hist(pop_samps.reshape(-1),histtype='step',density=True,bins=20)
+plt.savefig('/home/phil/Research/sodapop-o3/power_distrib.png')

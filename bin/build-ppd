@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 'BUILD-PPD -- build posterior predictive distribution from posterior population distribution'
-__usage__ = 'build-ppd pop_params_post.csv [-p pop_model1 -S 0.5,30.,0.5,3.,0.,1000. -o /path/to/output.csv -S num_select_samps -v]'
+__usage__ = 'build-ppd pop_params_post.csv [-p pop_model1 -o /path/to/output.csv -s num_samps -v]'
 __author__ = 'Philippe Landry (pgjlandry@gmail.com)'
 __date__ = '01-2021'
 
@@ -9,20 +9,24 @@ from argparse import ArgumentParser
 import numpy as np
 import numpy.random
 import os
+import astropy.units as u
+from astropy.coordinates import Distance
+from astropy.cosmology import Planck15 as cosmo
 import sodapop.populations as pop
 import sodapop.parameters as prm
 import sodapop.priors as pri
+import sodapop.diagnostics as dgn
+import sodapop.select as sel
 
 parser = ArgumentParser(description=__doc__)
 parser.add_argument('popparams')
-parser.add_argument('-p', '--popmod', help='name of population model, DEFAULT="doublegaussian_m1m2"', default="doublegaussian_m1m2")
-parser.add_argument('-D', '--distprior', help='prior distribution for the distance, DEFAULT="quad,0.,1000."', default="quad,0.,1000.")
-parser.add_argument('-B', '--bhpop', help='population parameters for fixed BH mass model, DEFAULT=False', default=False, nargs='+')
-#parser.add_argument('-f', '--selfunc', help='name of selection function, DEFAULT=False', default=False)
-parser.add_argument('-S', '--selpriors', help='ranges in m1,m2 and dL for integrating selection function, DEFAULT="0.5,30.,0.5,30.,0.,1000."', default="0.5,30.,0.5,30.,0.,1000.")
-parser.add_argument('-s', '--nsel', help='number of samples to use for integrating selection function, DEFAULT=5000', default=5e3)
-parser.add_argument('-o', '--outpath', help='path for output population parameter samples, DEFAULT=AUTO', default=False)
+parser.add_argument('-p', '--popmod', help='name of population model, DEFAULT="unif_m1m2"', default="unif_m1m2")
+parser.add_argument('-s', '--nsel', help='number of samples to use for integrating ppd, DEFAULT=5000', default=5e3)
+parser.add_argument('-m', '--maxsamps', help='maximum number of population samples to use in marginalization, DEFAULT=10000', default=1e4)
+parser.add_argument('-f', '--selfunc', help='name of selection function, DEFAULT=False', default=False)
+parser.add_argument('-o', '--outpath', help='path for output ppd file, DEFAULT=AUTO', default=False)
 parser.add_argument('-d', '--delim', help='delimiter for data file, DEFAULT=","', default=',')
+parser.add_argument('-t', '--type', help='type of ppd to plot, DEFAULT=mean', default='mean')
 parser.add_argument('-v', '--verbose', action='store_true', default=False)
 args = parser.parse_args()
 
@@ -31,166 +35,170 @@ args = parser.parse_args()
 if args.outpath: out_path = args.outpath
 else: out_path = os.path.dirname(args.popparams)+'/'+args.popmod+'_ppd.csv'
 
-N_SELECT = int(args.nsel)
+if args.type == 'mean': ppd_type = False
+elif args.type == 'med': ppd_type = True
 
-if args.bhpop: lambdabh = [float(arg) for arg in args.bhpop]
-else: lambdabh = []
+N_SAMP = int(args.nsel)
+MAX_SAMPS = int(args.maxsamps)
 
-MMIN = 0.5
-MMAX = 3.
-mgrid = np.arange(MMIN,MMAX,0.04)
+MMIN, MMAX = (0.5,3.5)
+mgrid = np.arange(MMIN,MMAX,0.01)
+msamps = np.random.uniform(MMIN,MMAX,N_SAMP)
+
+FIXED_DL = 100.
+FIXED_Z = Distance(FIXED_DL,unit=u.Mpc).compute_z(cosmology=cosmo)
+
+WT_COLS = ['log_like', 'log_detfrac', 'weight']
+
+CL = 0.9 # confidence level for ppd error envelope
 
 ###
 
-# get population model and selection function
+# get population model and store population parameters in a dictionary
 
-pop_prob = pop.get_pop_prior(args.popmod)
+pop_model = pop.get_pop_prior(args.popmod)
 
-pop_param_names = (pop.get_pop_params(args.popmod)).split(',') # get population parameters from first-specified population model, check that they match what's in the prior samples later
-
-#if not args.selfunc: select_func = lambda *x : 1.
-#elif args.selfunc == 'False': select_func = lambda *x : 1.
-#else: select_func = pop.get_select_func(args.selfunc)
-
-dist_shape = (args.distprior).split(',')[0]
-dparams = [float(val) for val in (args.distprior).split(',')[1:]]
-dfunc = prm.get_param_prior_func(dist_shape)
-
-# store population parameters in a dictionary
-
-lambda_dict = {}
-j = 0
-for param in pop_param_names:
-		lambda_dict[param] = lambda x, j=j : x[j]
-		j += 1
-
-# generate uniform m1,m2,dL samples for integrating selection function
-
-selectprior = args.selpriors
-
-m1lb,m1ub,m2lb,m2ub,dllb,dlub = [float(val) for val in (selectprior).split(',')]
+pop_param_names = (pop.get_pop_params(args.popmod)).split(',') 
+lambda_dict = prm.create_lambda_dict(pop_param_names)
 	
-#m1_u = np.random.uniform(m1lb,m1ub,N_SELECT)
-#m2_u = np.random.uniform(m2lb,m2ub,N_SELECT)
-dl_select = np.random.uniform(dllb,dlub,N_SELECT)
-	
-#m1_select = []
-#m2_select = []
-#for m1u,m2u in zip(m1_u,m2_u):
-#	while m1u < m2u:
-#		m1u = np.random.uniform(m1lb,m1ub,1)
-#		m2u = np.random.uniform(m2lb,m2ub,1)
-			
-#	m1_select += [m1u]
-#	m2_select += [m2u]
-	
-#samps_select = np.array([(m1_select[j],m2_select[j],dl_select[j]) for j in range(N_SELECT)],dtype='f,f,f') # uniform m1,m2,dl samples subject to m1 > m2
-	
-# calculate sensitivity for each population realization
+# load population posterior
 
 pop_params = np.genfromtxt(args.popparams, names=True, dtype=None, delimiter=args.delim, encoding=None)
-param_names = list(pop_params.dtype.names)[:-2]
+param_names = list(pop_params.dtype.names)
+for wt_col in WT_COLS: param_names.remove(wt_col)
 num_post_samps = len(pop_params[param_names[0]])
 
-sensitivities = []
-pads = []
-ppds = []
-pads_m1 = []
-pads_m2 = []
-ppds_m1 = []
-ppds_m2 = []
+# load selection function
 
-pop_param_names = lambda_dict.keys()
+if args.selfunc == False or args.selfunc == 'False': select_func = lambda *x : 1.
+else: select_func = sel.get_select_func(args.selfunc)
 
-for line in range(num_post_samps):
+# marginalize over population realizations
 
-	if args.verbose: print(line)
+lambdas = [[lambda_dict[param](pop_params[line]) for param in pop_param_names if param in param_names] for line in range(num_post_samps)]
+
+if len(lambdas) > MAX_SAMPS:
+	idxs = np.random.choice(range(num_post_samps),MAX_SAMPS,False)
+	lambdas = np.array(lambdas)[idxs]
+	lambdas = list(lambdas)
+
+padm1, padm2, ppdm1, ppdm2 = [], [], [], []
+padm1_med, padm2_med, ppdm1_med, ppdm2_med = [], [], [], []
+padm1_lb, padm2_lb, ppdm1_lb, ppdm2_lb = [], [], [], []
+padm1_ub, padm2_ub, ppdm1_ub, ppdm2_ub = [], [], [], []
+
+for m in mgrid:
+
+	m1counts_per_model, m2counts_per_model, obs_m1counts_per_model, obs_m2counts_per_model = [], [], [], []
+
+	for lambdaa in lambdas:
 	
-	lambdaa = [lambda_dict[param](pop_params[line]) for param in pop_param_names if param in param_names]
-
-	denom = np.exp(pop_params[line][-2]) # expects sensitivity as 2nd-last col
+		m2s = msamps
+		model_m1counts_per_m2 = pop_model(np.full(N_SAMP,m),m2s,lambdaa)
+		model_m1select_per_m2 = select_func(np.full(N_SAMP,m),m2s,np.full(N_SAMP,FIXED_DL),np.full(N_SAMP,FIXED_Z))
+		model_m1counts = np.sum(model_m1counts_per_m2)
+		model_m1obs = np.sum(model_m1counts_per_m2*model_m1select_per_m2)
 		
-#	denom = 0.
-#	for m1,m2,dl in samps_select:
-#		if m1 > lambdabh[-2]:
-#			pop_prob = pop_probs[-1] # nsbh likelihoods assumed to come last, if present
-#			denom += select_func(m1,m2,dl)*pop_prob(m1,m2,*lambdaa,*lambdabh)*dfunc(dl,*dparams)
-#		else:
-#			pop_prob = pop_probs[0] # bns likelihoods assumed to come first
-#			denom += select_func(m1,m2,dl)*pop_prob(m1,m2,*lambdaa)*dfunc(dl,*dparams)
-#	if denom <= 0.: print('denom:', lambdaa)
-
-#	denom = denom/N_SELECT
-	
-	padm1_samples = []
-	padm2_samples = []
-	for m in mgrid:
-		mcsamps_m1 = np.random.uniform(m,m1ub,N_SELECT)
-		mcsamps_m2 = np.random.uniform(m2lb,m,N_SELECT)
+		m1s = msamps
+		model_m2counts_per_m1 = pop_model(m1s,np.full(N_SAMP,m),lambdaa)
+		model_m2select_per_m1 = select_func(m1s,np.full(N_SAMP,m),np.full(N_SAMP,FIXED_DL),np.full(N_SAMP,FIXED_Z))
+		model_m2counts = np.sum(model_m2counts_per_m1)
+		model_m2obs = np.sum(model_m2counts_per_m1*model_m2select_per_m1)
 		
-		padm1_sum = [pop_prob(m,m2,*lambdaa)*dfunc(dl,*dparams) for m2,dl in zip(mcsamps_m2,dl_select)]
-		padm2_sum = [pop_prob(m1,m,*lambdaa)*dfunc(dl,*dparams) for m1,dl in zip(mcsamps_m1,dl_select)]
+		m1counts_per_model += [model_m1counts]
+		m2counts_per_model += [model_m2counts]
+		obs_m1counts_per_model += [model_m1obs]
+		obs_m2counts_per_model += [model_m2obs]
 		
-		padm1_samples += [np.sum(padm1_sum)/N_SELECT]
-		padm2_samples += [np.sum(padm2_sum)/N_SELECT]
-		
-	ppdm1_samples = [padm1/denom for padm1 in padm1_samples]
-	ppdm2_samples = [padm2/denom for padm2 in padm2_samples]
+	avg_m1counts = np.sum(m1counts_per_model)/num_post_samps
+	avg_m2counts = np.sum(m2counts_per_model)/num_post_samps
+	avg_obs_m1counts = np.sum(obs_m1counts_per_model)/num_post_samps
+	avg_obs_m2counts = np.sum(obs_m2counts_per_model)/num_post_samps
 	
-	pad_samples = [0.5*(padm1+padm2) for padm1,padm2 in zip(padm1_samples,padm2_samples)]
-	ppd_samples = [0.5*(ppdm1+ppdm2) for ppdm1,ppdm2 in zip(ppdm1_samples,ppdm2_samples)] # marginalize over m1,m2 distinction
+	med_m1counts = np.median(m1counts_per_model)
+	med_m2counts = np.median(m2counts_per_model)
+	med_obs_m1counts = np.median(obs_m1counts_per_model)
+	med_obs_m2counts = np.median(obs_m2counts_per_model)
 	
-	sensitivities += [denom]
-	pads += [pad_samples]
-	pads_m1 += [padm1_samples]
-	pads_m2 += [padm2_samples]
-	ppds += [ppd_samples]
-	ppds_m1 += [ppdm1_samples]
-	ppds_m2 += [ppdm2_samples]
-
-# save population parameters posterior
-
-cols = [pop_params[param] for param in pop_param_names if param in param_names]
-cols += [sensitivities]
-
-lbs = []
-meds = []
-ubs = []
-ppds = np.vstack(ppds)
-for i in range(len(mgrid)):
-	ppd_vals = ppds[:,i]
-	cols += [ppd_vals]
+	lb_m1counts = np.quantile(m1counts_per_model,(1.-CL)/2.)
+	lb_m2counts = np.quantile(m2counts_per_model,(1.-CL)/2.)
+	lb_obs_m1counts = np.quantile(obs_m1counts_per_model,(1.-CL)/2.)
+	lb_obs_m2counts = np.quantile(obs_m2counts_per_model,(1.-CL)/2.)
 	
-	meds += [np.quantile(ppd_vals,0.5)]
-	lbs += [np.quantile(ppd_vals,0.05)]
-	ubs += [np.quantile(ppd_vals,0.95)]
-
-samps_out = np.column_stack(cols)
-col_names = ','.join(pop_param_names)+',sensitivity,'+','.join(['m={0:.2f}'.format(m) for m in mgrid])
-np.savetxt(out_path,samps_out[np.isfinite(samps_out).all(axis=1)],header=col_names,comments='',delimiter=',')
-
-norm = np.trapz(meds,mgrid)
-quants_out = np.column_stack([mgrid,lbs/norm,meds/norm,ubs/norm])
-np.savetxt(os.path.dirname(out_path)+'/'+os.path.basename(out_path).split('.')[0]+'_quantiles.csv',quants_out,header='m,lb,med,ub',comments='',delimiter=',')
-
-cols = [pop_params[param] for param in pop_param_names if param in param_names]
-
-lbs = []
-meds = []
-ubs = []
-pads = np.vstack(pads)
-for i in range(len(mgrid)):
-	pad_vals = pads[:,i]
-	cols += [pad_vals]
+	ub_m1counts = np.quantile(m1counts_per_model,CL+(1.-CL)/2.)
+	ub_m2counts = np.quantile(m2counts_per_model,CL+(1.-CL)/2.)
+	ub_obs_m1counts = np.quantile(obs_m1counts_per_model,CL+(1.-CL)/2.)
+	ub_obs_m2counts = np.quantile(obs_m2counts_per_model,CL+(1.-CL)/2.)
 	
-	meds += [np.quantile(pad_vals,0.5)]
-	lbs += [np.quantile(pad_vals,0.05)]
-	ubs += [np.quantile(pad_vals,0.95)]
+	padm1 += [avg_m1counts]
+	padm2 += [avg_m2counts]
+	ppdm1 += [avg_obs_m1counts]
+	ppdm2 += [avg_obs_m2counts]
+	
+	padm1_med += [med_m1counts]
+	padm2_med += [med_m2counts]
+	ppdm1_med += [med_obs_m1counts]
+	ppdm2_med += [med_obs_m2counts]
+	
+	padm1_lb += [lb_m1counts]
+	padm2_lb += [lb_m2counts]
+	ppdm1_lb += [lb_obs_m1counts]
+	ppdm2_lb += [lb_obs_m2counts]
+	
+	padm1_ub += [ub_m1counts]
+	padm2_ub += [ub_m2counts]
+	ppdm1_ub += [ub_obs_m1counts]
+	ppdm2_ub += [ub_obs_m2counts]
 
-samps_out = np.column_stack(cols)
-col_names = ','.join(pop_param_names)+','+','.join(['m={0:.2f}'.format(m) for m in mgrid])
-np.savetxt(os.path.dirname(out_path)+'/'+os.path.basename(out_path).split('_ppd.')[0]+'_pad.csv',samps_out[np.isfinite(samps_out).all(axis=1)],header=col_names,comments='',delimiter=',')
+norm_padm1 = np.trapz(padm1,mgrid)
+norm_padm2 = np.trapz(padm2,mgrid)
+norm_ppdm1 = np.trapz(ppdm1,mgrid)
+norm_ppdm2 = np.trapz(ppdm2,mgrid)
 
-norm = np.trapz(meds,mgrid)
-quants_out = np.column_stack([mgrid,lbs/norm,meds/norm,ubs/norm])
-np.savetxt(os.path.dirname(out_path)+'/'+os.path.basename(out_path).split('_ppd.')[0]+'_pad_quantiles.csv',quants_out,header='m,lb,med,ub',comments='',delimiter=',')
+padm1 = np.array(padm1)/norm_padm1
+padm2 = np.array(padm2)/norm_padm2
+ppdm1 = np.array(ppdm1)/norm_ppdm1
+ppdm2 = np.array(ppdm2)/norm_ppdm2
+
+#med_norm_padm1 = np.trapz(padm1_med,mgrid)
+#med_norm_padm2 = np.trapz(padm2_med,mgrid)
+#med_norm_ppdm1 = np.trapz(ppdm1_med,mgrid)
+#med_norm_ppdm2 = np.trapz(ppdm2_med,mgrid)
+
+padm1_med = np.array(padm1_med)/norm_padm1
+padm2_med = np.array(padm2_med)/norm_padm2
+ppdm1_med = np.array(ppdm1_med)/norm_ppdm1
+ppdm2_med = np.array(ppdm2_med)/norm_ppdm2
+
+padm1_lb = np.array(padm1_lb)/norm_padm1
+padm2_lb = np.array(padm2_lb)/norm_padm2
+ppdm1_lb = np.array(ppdm1_lb)/norm_ppdm1
+ppdm2_lb = np.array(ppdm2_lb)/norm_ppdm2
+
+padm1_ub = np.array(padm1_ub)/norm_padm1
+padm2_ub = np.array(padm2_ub)/norm_padm2
+ppdm1_ub = np.array(ppdm1_ub)/norm_ppdm1
+ppdm2_ub = np.array(ppdm2_ub)/norm_ppdm2
+	
+pad = 0.5*padm1+0.5*padm2
+ppd = 0.5*ppdm1+0.5*ppdm2
+
+pad_med = 0.5*padm1_med+0.5*padm2_med
+ppd_med = 0.5*ppdm1_med+0.5*ppdm2_med
+
+pad_lb = 0.5*padm1_lb+0.5*padm2_lb
+ppd_lb = 0.5*ppdm1_lb+0.5*ppdm2_lb
+
+pad_ub = 0.5*padm1_ub+0.5*padm2_ub
+ppd_ub = 0.5*ppdm1_ub+0.5*ppdm2_ub
+
+# save ppds
+
+data_out = np.column_stack((mgrid, pad, pad_med, pad_lb, pad_ub, ppd, ppd_med, ppd_lb, ppd_ub, padm1, padm1_med, padm1_lb, padm1_ub, ppdm1, ppdm1_med, ppdm1_lb, ppdm1_ub, padm2, padm2_med, padm2_lb, padm2_ub, ppdm2, ppdm2_med, ppdm2_lb, ppdm2_ub))
+header_out = 'm,mean,med,lb,ub,obs_mean,obs_med,obs_lb,obs_ub,m1mean,m1med,m1lb,m1ub,obs_m1mean,obs_m1med,obs_m1lb,obs_m1ub,m2mean,m2med,m2lb,m2ub,obs_m2mean,obs_m2med,obs_m2lb,obs_m2ub'
+
+np.savetxt(out_path,data_out,header=header_out,comments='',delimiter=',')
+
+# make diagnostic plot of ppds
+
+dgn.ppd_plot(data_out,os.path.dirname(out_path)+'/ppd.png',ppd_type,True)
