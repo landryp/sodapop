@@ -4,7 +4,7 @@ import numpy as np
 import numpy.random
 import h5py
 import pop_models
-from pop_models.astro_models.gw_ifo_vt import RegularGridVTInterpolator
+#from pop_models.astro_models.gw_ifo_vt import RegularGridVTInterpolator
 import astropy.units as u
 from astropy.coordinates import Distance
 from astropy.cosmology import Planck15 as cosmo
@@ -49,9 +49,9 @@ def chirpmass52(m1,m2,dl,z): # snr selection proportional to (chirp mass)^5/2
 
 	return x
 
-vtdat = h5py.File('/home/daniel.wysocki/pop-models-heartbeat-o3/vts/analytic/vt_aLIGO140MpcT1800545_BBH+BNS+NSBH_fine_m1_m2_a1z_a2z.hdf5','r')
-vt = RegularGridVTInterpolator(vtdat)
-	
+#vtdat = h5py.File('/home/daniel.wysocki/pop-models-heartbeat-o3/vts/analytic/vt_aLIGO140MpcT1800545_BBH+BNS+NSBH_fine_m1_m2_a1z_a2z.hdf5','r')
+#vt = RegularGridVTInterpolator(vtdat)
+'''	
 def semianalyticvt(m1,m2,dl,z,chi1=0.,chi2=0.,vt=vt): # aLIGO sensitivity
 
 	if np.isscalar(m1): m1 = np.array([m1])
@@ -70,6 +70,8 @@ def semianalyticvt(m1,m2,dl,z,chi1=0.,chi2=0.,vt=vt): # aLIGO sensitivity
 	return vt((m1,m2,chi1,chi2))
 
 select_funcs = {'snrcut': snrcut, 'semianalyticvt': semianalyticvt, 'chirpmass52': chirpmass52}
+'''
+select_funcs = {'snrcut': snrcut, 'chirpmass52': chirpmass52}
 	
 ### TOOLS FOR HANDLING SELECTION FUNCTIONS
 
