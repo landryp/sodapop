@@ -3,7 +3,7 @@
 import numpy as np
 import numpy.random
 import h5py
-import pop_models
+#import pop_models
 #from pop_models.astro_models.gw_ifo_vt import RegularGridVTInterpolator
 import astropy.units as u
 from astropy.coordinates import Distance
