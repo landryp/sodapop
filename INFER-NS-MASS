@@ -1,0 +1,78 @@
+#!/bin/bash
+
+LIKEPATH="./sodapop/etc"
+LIKES="GW170817_reweighted.csv,GW190425_reweighted.csv,GW190426_reweighted.csv,GW200105_reweighted.csv,GW200115_reweighted.csv;GW170817_reweighted.csv,GW190425_reweighted.csv,GW190426_reweighted.csv,GW200105_reweighted.csv,GW200115_reweighted.csv,GW190917_reweighted.csv;GW170817_reweighted.csv,GW190425_reweighted.csv,GW190426_reweighted.csv,GW200105_reweighted.csv,GW200115_reweighted.csv,GW190917_reweighted.csv,GW190814_reweighted.csv"
+CLASSES="bns,bns,nsbh,nsbh,nsbh;bns,bns,nsbh,nsbh,nsbh,nsbh;bns,bns,nsbh,nsbh,nsbh,nsbh,nsbh"
+LIKESETS="A,B,C,D"
+MINMMAXS="1.7,1.7,2.5"
+NSBHBETA="0."
+
+POPMODELS="unif_m1m2,unif_m1m2_qpair,power_m1m2,power_m1m2_qpair,bimodcut_m1m2,bimodcut_m1m2_qpair"
+POPSTARTS="mmin,mmax+flatmmin_mmax,1.,1.4;mmin,mmax+flatmmin_mmax,1.,1.4 beta+flat,0.,4.;alpha+flat,-4.,0. mmin,mmax+flatmmin_mmax,1.,1.4;alpha+flat,-4.,0. mmin,mmax+flatmmin_mmax,1.,1.4 beta+flat,0.,4.;mmin,mmax,mu1,mu2+flatmminmu1mu2_mmax,1.,1.4,1.,2.,1.,2. sigma1+flat,0.01,2. sigma2+flat,0.01,2. w+flat,0.,1.;mmin,mmax,mu1,mu2+flatmminmu1mu2_mmax,1.,1.4,1.,2.,1.,2. sigma1+flat,0.01,2. sigma2+flat,0.01,2. w+flat,0.,1. beta+flat,0.,4."
+POPPRIORS="mmin,mmax+flatmmin_mmax,1.,1.5;mmin,mmax+flatmmin_mmax,1.,1.5 beta+flat,-4.,12.;alpha+flat,-12.,4. mmin,mmax+flatmmin_mmax,1.,1.5;alpha+flat,-12.,4. mmin,mmax+flatmmin_mmax,1.,1.5 beta+flat,-4.,12.;mmin,mmax,mu1,mu2+flatmminmu1mu2_mmax,1.,1.5,1.,3.,1.,3. sigma1+flat,0.01,2. sigma2+flat,0.01,2. w+flat,0.,1.;mmin,mmax,mu1,mu2+flatmminmu1mu2_mmax,1.,1.5,1.,3.,1.,3. sigma1+flat,0.01,2. sigma2+flat,0.01,2. w+flat,0.,1. beta+flat,-4.,12."
+NUMPARAMS="2,2,3,3,7,7" # excluding beta
+WALKERS="10,21,21,36,105,136"
+
+NSBHPOPMODELS="unif_m1_unif_m2_qpair,unif_m1_unif_m2_qpair,unif_m1_power_m2_qpair,unif_m1_power_m2_qpair,unif_m1_bimodcut_m2_qpair,unif_m1_bimodcut_m2_qpair"
+
+SELECTS="semianalyticvt,chirpmass52"
+
+NUMLIKE=1000
+NUMSEL=5000
+NUMBURN=1000
+NUMPOST=10000
+
+IFS=';' read -r -a likes <<< "$LIKES"
+IFS=';' read -r -a classes <<< "$CLASSES"
+IFS=',' read -r -a likesets <<< "$LIKESETS"
+IFS=',' read -r -a minmmaxs <<< "$MINMMAXS"
+IFS=',' read -r -a popmodels <<< "$POPMODELS"
+IFS=';' read -r -a popstarts <<< "$POPSTARTS"
+IFS=';' read -r -a poppriors <<< "$POPPRIORS"
+IFS=',' read -r -a numparams <<< "$NUMPARAMS"
+IFS=',' read -r -a walkers <<< "$WALKERS"
+IFS=',' read -r -a nsbhpopmodels <<< "$NSBHPOPMODELS"
+IFS=',' read -r -a selects <<< "$SELECTS"
+
+i=0
+for like in "${likes[@]}"
+do
+	IFS=',' read -r -a likelihoods <<< "$like"
+	IFS=',' read -r -a classifications <<< "${classes[$i]}"
+	likeset=${likesets[$i]}
+	minmmax=${minmmaxs[$i]}
+	
+	j=0
+	for popmodel in "${popmodels[@]}"
+	do
+	
+		walker=${walkers[$j]}
+		popstart=${popstarts[$j]}
+		popprior=${poppriors[$j]}
+		numparam=${numparams[$j]}
+		nsbhpopmodel=${nsbhpopmodels[$j]}
+	
+		for select in "${selects[@]}"
+		do
+	
+			mkdir "$PWD/set${likeset}-${popmodel}-${select}"
+			echo "sample-pop-params ${popmodel} -n 10000 -p ${popstart} -F False -g 100000 -o $PWD/set${likeset}-${popmodel}-${select}/${popmodel}_prior.csv -v" > "$PWD/set${likeset}-${popmodel}-${select}/doit"
+			echo "" >> "$PWD/set${likeset}-${popmodel}-${select}/doit"
+			echo "head -n 1 $PWD/set${likeset}-${popmodel}-${select}/${popmodel}_prior.csv > $PWD/set${likeset}-${popmodel}-${select}/${popmodel}_prior.csv.tmp
+			awk '{FS= \",\"} \$${numparam} > ${minmmax} {print \$0}' $PWD/set${likeset}-${popmodel}-${select}/${popmodel}_prior.csv >> $PWD/set${likeset}-${popmodel}-${select}/${popmodel}_prior.csv.tmp
+			head -n $((${walker}+1)) $PWD/set${likeset}-${popmodel}-${select}/${popmodel}_prior.csv.tmp > $PWD/set${likeset}-${popmodel}-${select}/${popmodel}_prior.csv
+			rm $PWD/set${likeset}-${popmodel}-${select}/${popmodel}_prior.csv.tmp" >> "$PWD/set${likeset}-${popmodel}-${select}/doit"
+			echo "" >> "$PWD/set${likeset}-${popmodel}-${select}/doit"
+			echo "infer-pop-params $PWD/set${likeset}-${popmodel}-${select}/${popmodel}_prior.csv $(for likelihood in "${likelihoods[@]}"; do echo -n "${LIKEPATH}/${likelihood} "; done) -p ${popmodel} ${nsbhpopmodel} -C $(for class in "${classifications[@]}"; do echo -n "${class} "; done) -c m1_source m2_source dL z likelihood -l ${NUMLIKE} -P ${popprior} -F False -D quad,0.,1000. -B 3. 60. ${NSBHBETA} -f ${select} -S 1.,60.,1.,3.,0.,1000. -s ${NUMSEL} -t ${NUMPOST} -w ${walker} -b ${NUMBURN} -o $PWD/set${likeset}-${popmodel}-${select}/${popmodel}.csv --diag -v" >> "$PWD/set${likeset}-${popmodel}-${select}/doit"
+			echo "" >> "$PWD/set${likeset}-${popmodel}-${select}/doit"
+			echo "build-ppd $PWD/set${likeset}-${popmodel}-${select}/${popmodel}.csv -p ${popmodel} -s ${NUMSEL} -f ${select} -o $PWD/set${likeset}-${popmodel}-${select}/${popmodel}_ppd.csv -t med -v" >> "$PWD/set${likeset}-${popmodel}-${select}/doit"
+
+			nohup bash "$PWD/set${likeset}-${popmodel}-${select}/doit" 1> "$PWD/set${likeset}-${popmodel}-${select}/nohup.out" 2> "$PWD/set${likeset}-${popmodel}-${select}/nohup.err" &
+		
+		done
+		
+		j=$(($j+1))
+	done
+
+	i=$(($i+1))
+done

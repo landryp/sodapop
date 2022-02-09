@@ -18,11 +18,14 @@ parser.add_argument('-n', '--numsamps', help='number of samples to draw, DEFAULT
 parser.add_argument('-p', '--priors', help='prior distribution and hyperparameters for each population parameter, DEFAULT="mmax+flat,0.,1."', default="mmax+flat,0.,1.", type=str, nargs='+')
 parser.add_argument('-F', '--fixed', help='fixed population parameter values (e.g. mmin,1.0), DEFAULT=False', default=False, nargs='+')
 parser.add_argument('-o', '--outpath', help='path for output reweighted samples, DEFAULT=AUTO', default=False)
+parser.add_argument('-g', '--gridpts', help='number of grid points to build prior on, DEFAULT=10000', default=10000, type=float)
 parser.add_argument('-v', '--verbose', action='store_true', default=False)
 args = parser.parse_args()
 
 if args.outpath: out_path = args.outpath
 else: out_path = '{0}_prior.csv'.format(args.popmodel)
+
+GRID_PTS = int(args.gridpts)
 
 prior_keys = []
 param_names = []
@@ -63,13 +66,19 @@ for key in prior_keys:
 	key_names = key.split(',')
 	num_names = len(key_names)
 	
-	grid_list = [params.flat(10000,0.,5.) for i in range(num_names)]
-	unif_grid = [[grid[j] for grid in grid_list] for j in range(10000)]
+	grid_list = []
+	for i in range(num_names):
+		if key_names[i] == 'alpha' or key_names[i] == 'beta':
+			grid_list += [params.flat(GRID_PTS,-12.,12.)]
+		else:	
+			grid_list += [params.flat(GRID_PTS,0.,5.)]
+	
+	unif_grid = [[grid[j] for grid in grid_list] for j in range(GRID_PTS)]
 
 	prior_func = params.get_param_prior_func(prior_funcs[key])
 	prior_wts = [prior_func(*grid_pt,*hyp_params[key]) for grid_pt in unif_grid]
 	
-	samps_idxs = np.random.choice(range(10000),num_samps,True,prior_wts/np.sum(prior_wts))
+	samps_idxs = np.random.choice(range(GRID_PTS),num_samps,True,prior_wts/np.sum(prior_wts))
 	
 	for i,key_name in enumerate(key_names):
 		samps[key_name] = [unif_grid[k][i] for k in samps_idxs]

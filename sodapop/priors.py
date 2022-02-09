@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
 import numpy as np
+import astropy.units as u
+from astropy.coordinates import Distance
+from astropy.cosmology import Planck15 as cosmo
 
 ### BASIC FUNCTIONS
 
@@ -8,9 +11,9 @@ def src_to_det(m,z): # convert to detector frame mass from source frame
     
 	return m*(1.+z)
     
-def dL_to_z(dL,H0=67.4): # convert distance to redshift, assuming a cosmology
+def dL_to_z(dL): # convert distance to redshift, assuming a cosmology
     
-	return H0*dL/2.998e5
+	return Distance(dL,unit=u.Mpc).compute_z(cosmology=cosmo)
 	
 ### BINARY MASS PRIORS
 
@@ -82,3 +85,4 @@ def get_binary_mass_prior(key):
 		raise KeyError
 
 	return prior_func
+	

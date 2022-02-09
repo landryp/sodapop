@@ -13,7 +13,7 @@ import sodapop.priors as priors
 parser = ArgumentParser(description=__doc__)
 parser.add_argument('data')
 parser.add_argument('-d', '--delim', help='delimiter for data file, DEFAULT=","', default=',')
-parser.add_argument('-c', '--cols', help='name of mass1, mass2 and distance data columns to use, DEFAULT="m1 m2 dL"', default=['m1','m2','dL'], nargs=3)
+parser.add_argument('-c', '--cols', help='name of mass1, mass2, distance and redshift data columns to use, DEFAULT="m1 m2 dL z"', default=['m1','m2','dL','z'], nargs=4)
 parser.add_argument('-p', '--oldprior', help='name of original prior distribution, DEFAULT="flat_m1m2det"', default="flat_m1m2det", type=str)
 parser.add_argument('-r', '--newprior', help='name of desired prior distribution for reweighted samples, DEFAULT="flat_m1m2"', default="flat_m1m2", type=str)
 parser.add_argument('-o', '--outpath', help='path for output reweighted samples, DEFAULT=AUTO', default=False)
@@ -38,6 +38,7 @@ if args.verbose: print(cols)
 m1s = post_data[args.cols[0]]
 m2s = post_data[args.cols[1]]
 dLs = post_data[args.cols[2]]
+zs = post_data[args.cols[3]]
 
 if args.maxsamps:
 
@@ -45,18 +46,19 @@ if args.maxsamps:
 	m1s = [m1s[idx] for idx in idxs]
 	m2s = [m2s[idx] for idx in idxs]
 	dLs = [dLs[idx] for idx in idxs]
+	zs = [zs[idx] for idx in idxs]
 
-post_samps = list(zip(m1s,m2s,dLs))
+post_samps = list(zip(m1s,m2s,dLs,zs))
 num_samps = len(m1s)
 post_weights = np.ones(num_samps) # assume equally weighted posterior samples
 
 # calculate old prior weight for each posterior sample
 
-old_prior_weights = [old_prior(*samp) for samp in post_samps]
+old_prior_weights = [old_prior(*samp[:-1]) for samp in post_samps]
 
 # calculate new prior weight for each posterior sample
 
-new_prior_weights = [new_prior(*samp) for samp in post_samps]
+new_prior_weights = [new_prior(*samp[:-1]) for samp in post_samps]
 
 # reweight posterior via (new prior) * (likelihood), where likelihood = (posterior) / (old prior)
 
@@ -64,6 +66,6 @@ new_post_weights = [post_weight*(new_prior_weight/old_prior_weight) for post_wei
 
 # save reweighted posterior
 
-new_post_samps = np.column_stack((np.array(m1s), np.array(m2s), np.array(dLs), np.array([1./wt for wt in old_prior_weights]), np.array(new_prior_weights), np.array(new_post_weights)))
-col_names = 'm1_source,m2_source,dL,likelihood,prior,posterior'
+new_post_samps = np.column_stack((np.array(m1s), np.array(m2s), np.array(dLs), np.array(zs), np.array([1./wt for wt in old_prior_weights]), np.array(new_post_weights)))
+col_names = 'm1_source,m2_source,dL,z,likelihood,posterior'
 np.savetxt(out_path,new_post_samps,header=col_names,comments='',delimiter=',')

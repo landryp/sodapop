@@ -13,7 +13,7 @@ setup(
     version = '0.0',
     url = 'https://github.com/landryp/sodapop',
     author = __author__,
-    author_email = 'philippe.landry@ligo.org',
+    author_email = 'pgjlandry@gmail.com',
     description = __description__,
     license = '',
     scripts = glob.glob('bin/*'),
