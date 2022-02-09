@@ -1,6 +1,8 @@
 # sodapop
 Tools for gravitational-wave population modeling and inference.
 
+*** this is a legacy branch to retain backwards compatibility for daniellmarc/reweighted-dns ***
+
 ### Posterior reweighting
 
 * reweight-masses /home/phil/Research/nspop/GW170817.dat -d ' ' -c m1_source m2_source distance -p flat_mcetadet -r flat_m1m2 -v
