@@ -409,7 +409,7 @@ def unif_chi1_unif_chi2(chi1,chi2,lambdaa): # uniform distribution in component 
 	if np.isscalar(chi2): chi2 = np.array([chi2])
 	else: chi2 = np.array(chi2)
 	
-	p = unif_chi(m1,lambdaa)*unif_chi(m2,lambdaa)
+	p = unif_chi(chi1,lambdaa)*unif_chi(chi2,lambdaa)
 	
 	return p
 	
