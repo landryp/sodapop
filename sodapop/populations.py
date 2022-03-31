@@ -387,14 +387,18 @@ def unif_chi(chi,lambdaa): # uniform spin magnitude distribution
 	
 def unif_common_chi(chi,chimax,lambdaa): # uniform spin magnitude distribution
 
+	chimin = lambdaa[0]
+	
 	if np.isscalar(chi): chi = np.array([chi])
 	else: chi = np.array(chi)
 	if np.isscalar(chimax): chimax = np.array([chimax])
 	else: chimax = np.array(chimax)
+	z = np.zeros(len(chi))
 	
-	p = np.array([uniform(chi0,(lambdaa[0],chimax0)) for chi0,chimax0 in zip(chi,chimax)])
-
-	return p
+	chimin = np.full(len(chi),chimin)
+	p = 1./(chimax-chimin)
+	
+	return np.where((chi > chimax) | (chi < chimin), z, p)
 	
 ### BINARY SPIN DISTRIBUTIONS
 
