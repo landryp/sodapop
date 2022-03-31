@@ -13,7 +13,7 @@ def ILove(m,Lambda): # empirical I-Love relation from arXiv:1608.02582
 
 	Ibar = np.exp(1.496+0.05951*np.log(Lambda)+0.02238*np.log(Lambda)**2-6.953e-4*np.log(Lambda)**3+8.345e-6*np.log(Lambda)**4) 
 
-	return Ibar*G**2*m**3/c**4
+	return Ibar*G**2*m**3*Msun**3/c**4
 	
 def fmaxLove(m,Lambda): # empirical fit to Kepler frequency in Hz from arXiv:0901.1268
 
