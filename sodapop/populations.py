@@ -389,7 +389,7 @@ def unif_chi(chi,lambdaa): # uniform spin magnitude distribution
 
 def unif_chi1_unif_chi2(chi1,chi2,lambdaa): # uniform distribution in component spin magnitudes
 
-	if np.isscalar(chi): chi1 = np.array([chi1])
+	if np.isscalar(chi1): chi1 = np.array([chi1])
 	else: chi1 = np.array(chi1)
 	if np.isscalar(chi2): chi2 = np.array([chi2])
 	else: chi2 = np.array(chi2)
@@ -406,7 +406,7 @@ def unif_m1m2_common_chi1chi2(m1,m2,chi1,chi2,lambdaa): # uniform distribution i
 	else: m1 = np.array(m1)
 	if np.isscalar(m2): m2 = np.array([m2])
 	else: m2 = np.array(m2)
-	if np.isscalar(chi): chi1 = np.array([chi1])
+	if np.isscalar(chi1): chi1 = np.array([chi1])
 	else: chi1 = np.array(chi1)
 	if np.isscalar(chi2): chi2 = np.array([chi2])
 	else: chi2 = np.array(chi2)
@@ -432,7 +432,7 @@ def peakcut_m1m2_common_chi1chi2(m1,m2,chi1,chi2,lambdaa): # uniform distributio
 	else: m1 = np.array(m1)
 	if np.isscalar(m2): m2 = np.array([m2])
 	else: m2 = np.array(m2)
-	if np.isscalar(chi): chi1 = np.array([chi1])
+	if np.isscalar(chi1): chi1 = np.array([chi1])
 	else: chi1 = np.array(chi1)
 	if np.isscalar(chi2): chi2 = np.array([chi2])
 	else: chi2 = np.array(chi2)
@@ -458,7 +458,7 @@ def bimodcut_m1m2_common_chi1chi2(m1,m2,chi1,chi2,lambdaa): # uniform distributi
 	else: m1 = np.array(m1)
 	if np.isscalar(m2): m2 = np.array([m2])
 	else: m2 = np.array(m2)
-	if np.isscalar(chi): chi1 = np.array([chi1])
+	if np.isscalar(chi1): chi1 = np.array([chi1])
 	else: chi1 = np.array(chi1)
 	if np.isscalar(chi2): chi2 = np.array([chi2])
 	else: chi2 = np.array(chi2)
@@ -587,7 +587,7 @@ def unif_m1m2_unif_chi1_unif_chi2_unif_Lambda1Lambda2(m1,m2,chi1,chi2,Lambda1,La
 	else: m1 = np.array(m1)
 	if np.isscalar(m2): m2 = np.array([m2])
 	else: m2 = np.array(m2)
-	if np.isscalar(chi): chi1 = np.array([chi1])
+	if np.isscalar(chi1): chi1 = np.array([chi1])
 	else: chi1 = np.array(chi1)
 	if np.isscalar(chi2): chi2 = np.array([chi2])
 	else: chi2 = np.array(chi2)
@@ -607,7 +607,7 @@ def peakcut_m1m2_unif_chi1_unif_chi2_unif_Lambda1Lambda2(m1,m2,chi1,chi2,Lambda1
 	else: m1 = np.array(m1)
 	if np.isscalar(m2): m2 = np.array([m2])
 	else: m2 = np.array(m2)
-	if np.isscalar(chi): chi1 = np.array([chi1])
+	if np.isscalar(chi1): chi1 = np.array([chi1])
 	else: chi1 = np.array(chi1)
 	if np.isscalar(chi2): chi2 = np.array([chi2])
 	else: chi2 = np.array(chi2)
@@ -627,7 +627,7 @@ def bimodcut_m1m2_unif_chi1_unif_chi2_unif_Lambda1Lambda2(m1,m2,chi1,chi2,Lambda
 	else: m1 = np.array(m1)
 	if np.isscalar(m2): m2 = np.array([m2])
 	else: m2 = np.array(m2)
-	if np.isscalar(chi): chi1 = np.array([chi1])
+	if np.isscalar(chi1): chi1 = np.array([chi1])
 	else: chi1 = np.array(chi1)
 	if np.isscalar(chi2): chi2 = np.array([chi2])
 	else: chi2 = np.array(chi2)
@@ -647,7 +647,7 @@ def unif_m1m2_unif_chi1_unif_chi2_common_Lambda1Lambda2(m1,m2,chi1,chi2,Lambda1,
 	else: m1 = np.array(m1)
 	if np.isscalar(m2): m2 = np.array([m2])
 	else: m2 = np.array(m2)
-	if np.isscalar(chi): chi1 = np.array([chi1])
+	if np.isscalar(chi1): chi1 = np.array([chi1])
 	else: chi1 = np.array(chi1)
 	if np.isscalar(chi2): chi2 = np.array([chi2])
 	else: chi2 = np.array(chi2)
@@ -667,7 +667,7 @@ def peakcut_m1m2_unif_chi1_unif_chi2_common_Lambda1Lambda2(m1,m2,chi1,chi2,Lambd
 	else: m1 = np.array(m1)
 	if np.isscalar(m2): m2 = np.array([m2])
 	else: m2 = np.array(m2)
-	if np.isscalar(chi): chi1 = np.array([chi1])
+	if np.isscalar(chi1): chi1 = np.array([chi1])
 	else: chi1 = np.array(chi1)
 	if np.isscalar(chi2): chi2 = np.array([chi2])
 	else: chi2 = np.array(chi2)
@@ -687,7 +687,7 @@ def bimodcut_m1m2_unif_chi1_unif_chi2_common_Lambda1Lambda2(m1,m2,chi1,chi2,Lamb
 	else: m1 = np.array(m1)
 	if np.isscalar(m2): m2 = np.array([m2])
 	else: m2 = np.array(m2)
-	if np.isscalar(chi): chi1 = np.array([chi1])
+	if np.isscalar(chi1): chi1 = np.array([chi1])
 	else: chi1 = np.array(chi1)
 	if np.isscalar(chi2): chi2 = np.array([chi2])
 	else: chi2 = np.array(chi2)
@@ -701,13 +701,13 @@ def bimodcut_m1m2_unif_chi1_unif_chi2_common_Lambda1Lambda2(m1,m2,chi1,chi2,Lamb
 
 	return np.where((m1 < m2) | (Lambda2 < Lambda1), z, p)
 	
-def unif_m1m2_common_chi1chi2_common_Lambda1Lambda2(m1,m2,chi1,chi2,Lambda1,Lambda2,lambdaa): # bimodal mass model with random pairing, uniform uncorrelated spins and common-EOS approximated tidal deformabilities
+def unif_m1m2_common_chi1chi2_common_Lambda1Lambda2(m1,m2,chi1,chi2,Lambda1,Lambda2,lambdaa): # uniform mass model with random pairing, uniform uncorrelated spins and common-EOS approximated tidal deformabilities
 
 	if np.isscalar(m1): m1 = np.array([m1])
 	else: m1 = np.array(m1)
 	if np.isscalar(m2): m2 = np.array([m2])
 	else: m2 = np.array(m2)
-	if np.isscalar(chi): chi1 = np.array([chi1])
+	if np.isscalar(chi1): chi1 = np.array([chi1])
 	else: chi1 = np.array(chi1)
 	if np.isscalar(chi2): chi2 = np.array([chi2])
 	else: chi2 = np.array(chi2)
@@ -731,13 +731,13 @@ def unif_m1m2_common_chi1chi2_common_Lambda1Lambda2(m1,m2,chi1,chi2,Lambda1,Lamb
 
 	return np.where((m1 < m2) | (Lambda2 < Lambda1), z, p)
 	
-def peakcut_m1m2_common_chi1chi2_common_Lambda1Lambda2(m1,m2,chi1,chi2,Lambda1,Lambda2,lambdaa): # bimodal mass model with random pairing, uniform uncorrelated spins and common-EOS approximated tidal deformabilities
+def peakcut_m1m2_common_chi1chi2_common_Lambda1Lambda2(m1,m2,chi1,chi2,Lambda1,Lambda2,lambdaa): # Gaussian mass model with random pairing, uniform uncorrelated spins and common-EOS approximated tidal deformabilities
 
 	if np.isscalar(m1): m1 = np.array([m1])
 	else: m1 = np.array(m1)
 	if np.isscalar(m2): m2 = np.array([m2])
 	else: m2 = np.array(m2)
-	if np.isscalar(chi): chi1 = np.array([chi1])
+	if np.isscalar(chi1): chi1 = np.array([chi1])
 	else: chi1 = np.array(chi1)
 	if np.isscalar(chi2): chi2 = np.array([chi2])
 	else: chi2 = np.array(chi2)
@@ -767,7 +767,7 @@ def bimodcut_m1m2_common_chi1chi2_common_Lambda1Lambda2(m1,m2,chi1,chi2,Lambda1,
 	else: m1 = np.array(m1)
 	if np.isscalar(m2): m2 = np.array([m2])
 	else: m2 = np.array(m2)
-	if np.isscalar(chi): chi1 = np.array([chi1])
+	if np.isscalar(chi1): chi1 = np.array([chi1])
 	else: chi1 = np.array(chi1)
 	if np.isscalar(chi2): chi2 = np.array([chi2])
 	else: chi2 = np.array(chi2)
