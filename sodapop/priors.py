@@ -24,7 +24,7 @@ def flat_m1m2(m1,m2,dL): # uniform prior in source frame masses, subject to m1 >
     
 	return val
 
-def flat_m1m2_quad_dL(m1,m2,dL): # flat in detector frame masses, subject to m1 >= m2 convention and quadratic prior in dL
+def flat_m1m2_quad_dL(m1,m2,dL): # flat in source frame masses, subject to m1 >= m2 convention and quadratic prior in dL
     
 	if m1 < m2: val = 0.
 	else: val = dL**2
@@ -72,10 +72,35 @@ def flat_mcqdet(m1,m2,dL): # flat in chirp mass and mass ratio, assuming flat pr
 	else: val = (1.+dL_to_z(dL))*(m1*m2)**0.6/(m1**2*(m1+m2)**0.2)
     
 	return val
+	
+def flat_mcqdet_quad_dL(m1,m2,dL): # flat in chirp mass and mass ratio, assuming quadratic prior in dL
+    
+	if m1 < m2: val = 0.
+	else: val = dL**2*(1.+dL_to_z(dL))*(m1*m2)**0.6/(m1**2*(m1+m2)**0.2)
+    
+	return val
+
+# BINARY MASS & SPIN PRIORS
+
+def flat_mcqdet_quad_dL_flat_chieff(m1,m2,dL,chi1,chi2):
+
+	if (m1 < m2) or (chi1 > 1.) or (chi1 < 0.) or (chi2 > 1.) or (chi2 < 0.): val = 0.
+	else: val = (1.)*dL**2*(1.+dL_to_z(dL))*(m1*m2)**0.6/(m1**2*(m1+m2)**0.2) #FIXME: add p(chi1,chi2) given flat chieff and aligned/isotropic spins
+
+	return val
+	
+# BINARY MASS & TIDAL DEFORMABILITY PRIORS
+
+def flat_mcqdet_quad_dL_flat_LambdaT(m1,m2,dL,Lambda1,Lambda2):
+
+	if (m1 < m2) or (chi1 > 1.) or (chi1 < 0.) or (chi2 > 1.) or (chi2 < 0.): val = 0.
+	else: val = (1.)*dL**2*(1.+dL_to_z(dL))*(m1*m2)**0.6/(m1**2*(m1+m2)**0.2) #FIXME: add p(Lambda1,Lambda2) given flat LambdaT
+
+	return val
 
 ### PRIOR LOOKUP FUNCTIONS
     
-binary_mass_priors = {'flat_m1m2': flat_m1m2, 'flat_m1m2det': flat_m1m2det, 'flat_mceta': flat_mceta, 'flat_mcetadet': flat_mcetadet, 'flat_m1m2det_quad_dL': flat_m1m2det_quad_dL, 'flat_m1m2_quad_dL': flat_m1m2_quad_dL, 'flat_mcq': flat_mcq , 'flat_mcqdet': flat_mcqdet}
+binary_mass_priors = {'flat_m1m2': flat_m1m2, 'flat_m1m2det': flat_m1m2det, 'flat_mceta': flat_mceta, 'flat_mcetadet': flat_mcetadet, 'flat_m1m2det_quad_dL': flat_m1m2det_quad_dL, 'flat_m1m2_quad_dL': flat_m1m2_quad_dL, 'flat_mcq': flat_mcq , 'flat_mcqdet': flat_mcqdet, 'flat_mcqdet_quad_dL': flat_mcqdet_quad_dL}
 
 def get_binary_mass_prior(key):
 
