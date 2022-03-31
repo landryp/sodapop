@@ -422,7 +422,7 @@ def unif_m1m2_common_chi1chi2(m1,m2,chi1,chi2,lambdaa): # uniform distribution i
 	common1 = (lambdaa[2],min(lambdaa[3],chi1max))
 	common2 = (lambdaa[2],min(lambdaa[3],chi2max))
 	
-	p = unif_m1m2(m1,m2,lambdaa)*unif_chi1(chi1,common1)*unif_chi2(chi2,common2)
+	p = unif_m1m2(m1,m2,lambdaa)*unif_chi(chi1,common1)*unif_chi(chi2,common2)
 	
 	return np.where(m1 < m2, z, p)
 	
@@ -448,7 +448,7 @@ def peakcut_m1m2_common_chi1chi2(m1,m2,chi1,chi2,lambdaa): # uniform distributio
 	common1 = (lambdaa[4],min(lambdaa[5],chi1max))
 	common2 = (lambdaa[4],min(lambdaa[5],chi2max))
 	
-	p = peakcut_m1m2(m1,m2,lambdaa)*unif_chi1(chi1,common1)*unif_chi2(chi2,common2)
+	p = peakcut_m1m2(m1,m2,lambdaa)*unif_chi(chi1,common1)*unif_chi(chi2,common2)
 	
 	return np.where(m1 < m2, z, p)
 	
@@ -474,7 +474,7 @@ def bimodcut_m1m2_common_chi1chi2(m1,m2,chi1,chi2,lambdaa): # uniform distributi
 	common1 = (lambdaa[7],min(lambdaa[8],chi1max))
 	common2 = (lambdaa[7],min(lambdaa[8],chi2max))
 	
-	p = bimodcut_m1m2(m1,m2,lambdaa)*unif_chi1(chi1,common1)*unif_chi2(chi2,common2)
+	p = bimodcut_m1m2(m1,m2,lambdaa)*unif_chi(chi1,common1)*unif_chi(chi2,common2)
 	
 	return np.where(m1 < m2, z, p)
 
@@ -727,7 +727,7 @@ def unif_m1m2_common_chi1chi2_common_Lambda1Lambda2(m1,m2,chi1,chi2,Lambda1,Lamb
 	common1 = (lambdaa[2],min(lambdaa[3],chi1max))
 	common2 = (lambdaa[2],min(lambdaa[3],chi2max))
 	
-	p = unif_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa[:2]+lambdaa[4:])*unif_chi1(chi1,common1)*unif_chi2(chi2,common2)
+	p = unif_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa[:2]+lambdaa[4:])*unif_chi(chi1,common1)*unif_chi(chi2,common2)
 
 	return np.where((m1 < m2) | (Lambda2 < Lambda1), z, p)
 	
@@ -757,7 +757,7 @@ def peakcut_m1m2_common_chi1chi2_common_Lambda1Lambda2(m1,m2,chi1,chi2,Lambda1,L
 	common1 = (lambdaa[4],min(lambdaa[5],chi1max))
 	common2 = (lambdaa[4],min(lambdaa[5],chi2max))
 	
-	p = peakcut_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa[:4]+lambdaa[6:])*unif_chi1(chi1,common1)*unif_chi2(chi2,common2)
+	p = peakcut_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa[:4]+lambdaa[6:])*unif_chi(chi1,common1)*unif_chi(chi2,common2)
 
 	return np.where((m1 < m2) | (Lambda2 < Lambda1), z, p)
 
@@ -787,7 +787,7 @@ def bimodcut_m1m2_common_chi1chi2_common_Lambda1Lambda2(m1,m2,chi1,chi2,Lambda1,
 	common1 = (lambdaa[7],min(lambdaa[8],chi1max))
 	common2 = (lambdaa[7],min(lambdaa[8],chi2max))
 	
-	p = bimodcut_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa[:7]+lambdaa[9:])*unif_chi1(chi1,common1)*unif_chi2(chi2,common2)
+	p = bimodcut_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa[:7]+lambdaa[9:])*unif_chi(chi1,common1)*unif_chi(chi2,common2)
 
 	return np.where((m1 < m2) | (Lambda2 < Lambda1), z, p)
 
