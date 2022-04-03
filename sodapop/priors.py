@@ -82,10 +82,14 @@ def flat_mcqdet_quad_dL(m1,m2,dL): # flat in chirp mass and mass ratio, assuming
 
 # BINARY MASS & SPIN PRIORS
 
-def flat_mcqdet_quad_dL_flat_chieff(m1,m2,dL,chi1,chi2):
+def flat_mcqdet_quad_dL_flat_chieff_aligned(m1,m2,dL,chi1,chi2):
 
-	if (m1 < m2) or (chi1 > 1.) or (chi1 < 0.) or (chi2 > 1.) or (chi2 < 0.): val = 0.
-	else: val = (1.)*dL**2*(1.+dL_to_z(dL))*(m1*m2)**0.6/(m1**2*(m1+m2)**0.2) #FIXME: add p(chi1,chi2) given flat chieff and aligned/isotropic spins
+	chimax = 0.89
+	chieff = (chi1+(m2/m1)*chi2)/(1.+(m2/m1))
+
+	if (m1 < m2) or (np.abs(chi1) > chimax) or (np.abs(chi2) > chimax): val = 0.
+	elif np.abs(chieff) <= chimax*(1.-(m2/m1))/(1.+(m2/m1)): val = 1.
+	else: val = (1.-(1.-(m2/m1)/(1.+(m2/m1))))/(1.-np.abs(chieff)/chimax)*dL**2*(1.+dL_to_z(dL))*(m1*m2)**0.6/(m1**2*(m1+m2)**0.2)
 
 	return val
 	
@@ -93,8 +97,21 @@ def flat_mcqdet_quad_dL_flat_chieff(m1,m2,dL,chi1,chi2):
 
 def flat_mcqdet_quad_dL_flat_LambdaT(m1,m2,dL,Lambda1,Lambda2):
 
-	if (m1 < m2) or (chi1 > 1.) or (chi1 < 0.) or (chi2 > 1.) or (chi2 < 0.): val = 0.
-	else: val = (1.)*dL**2*(1.+dL_to_z(dL))*(m1*m2)**0.6/(m1**2*(m1+m2)**0.2) #FIXME: add p(Lambda1,Lambda2) given flat LambdaT
+	if (m1 < m2) or (Lambda2 < Lambda1): val = 0.
+	else: val = np.exp(-((Lambda1-Lambda2*(m2/m1)**6)/(np.sqrt(2)*10.))**2)/(10.*np.sqrt(2*np.pi))*dL**2*(1.+dL_to_z(dL))*(m1*m2)**0.6/(m1**2*(m1+m2)**0.2)
+
+	return val
+	
+# BINARY MASS, SPIN & TIDAL DEFORMABILITY PRIORS
+
+def flat_mcqdet_quad_dL_flat_chieff_aligned_flat_LambdaT(m1,m2,dL,chi1,chi2,Lambda1,Lambda2):
+
+	chimax = 0.89
+	chieff = (chi1+(m2/m1)*chi2)/(1.+(m2/m1))
+
+	if (m1 < m2) or (np.abs(chi1) > chimax) or (np.abs(chi2) > chimax) or (Lambda2 < Lambda1): val = 0.
+	elif np.abs(chieff) <= chimax*(1.-(m2/m1))/(1.+(m2/m1)): val = np.exp(-((Lambda1-Lambda2*(m2/m1)**6)/(np.sqrt(2)*10.))**2)/(10.*np.sqrt(2*np.pi))*dL**2*(1.+dL_to_z(dL))*(m1*m2)**0.6/(m1**2*(m1+m2)**0.2)
+	else: val = (1.-(1.-(m2/m1)/(1.+(m2/m1))))/(1.-np.abs(chieff)/chimax)*np.exp(-((Lambda1-Lambda2*(m2/m1)**6)/(np.sqrt(2)*10.))**2)/(10.*np.sqrt(2*np.pi))*dL**2*(1.+dL_to_z(dL))*(m1*m2)**0.6/(m1**2*(m1+m2)**0.2)
 
 	return val
 
