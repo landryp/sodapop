@@ -117,7 +117,7 @@ def flat_mcqdet_quad_dL_flat_chieff_aligned_flat_LambdaT(m1,m2,dL,chi1,chi2,Lamb
 
 ### PRIOR LOOKUP FUNCTIONS
     
-binary_mass_priors = {'flat_m1m2': flat_m1m2, 'flat_m1m2det': flat_m1m2det, 'flat_mceta': flat_mceta, 'flat_mcetadet': flat_mcetadet, 'flat_m1m2det_quad_dL': flat_m1m2det_quad_dL, 'flat_m1m2_quad_dL': flat_m1m2_quad_dL, 'flat_mcq': flat_mcq , 'flat_mcqdet': flat_mcqdet, 'flat_mcqdet_quad_dL': flat_mcqdet_quad_dL}
+binary_mass_priors = {'flat_m1m2': flat_m1m2, 'flat_m1m2det': flat_m1m2det, 'flat_mceta': flat_mceta, 'flat_mcetadet': flat_mcetadet, 'flat_m1m2det_quad_dL': flat_m1m2det_quad_dL, 'flat_m1m2_quad_dL': flat_m1m2_quad_dL, 'flat_mcq': flat_mcq , 'flat_mcqdet': flat_mcqdet, 'flat_mcqdet_quad_dL': flat_mcqdet_quad_dL, 'flat_mcqdet_quad_dL_flat_chieff_aligned': flat_mcqdet_quad_dL_flat_chieff_aligned, 'flat_mcqdet_quad_dL_flat_LambdaT': flat_mcqdet_quad_dL_flat_LambdaT, 'flat_mcqdet_quad_dL_flat_chieff_aligned_flat_LambdaT': flat_mcqdet_quad_dL_flat_chieff_aligned_flat_LambdaT}
 
 def get_binary_mass_prior(key):
 
