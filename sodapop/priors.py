@@ -114,10 +114,21 @@ def flat_mcqdet_quad_dL_flat_chieff_aligned_flat_LambdaT(m1,m2,dL,chi1,chi2,Lamb
 	else: val = (1.-(1.-(m2/m1)/(1.+(m2/m1))))/(1.-np.abs(chieff)/chimax)*np.exp(-((Lambda1-Lambda2*(m2/m1)**6)/(np.sqrt(2)*10.))**2)/(10.*np.sqrt(2*np.pi))*dL**2*(1.+dL_to_z(dL))*(m1*m2)**0.6/(m1**2*(m1+m2)**0.2)
 
 	return val
+	
+def flat_mcqdet_quad_dL_flat_chieff_flat_LambdaT(m1,m2,dL,chi1,chi2,cost1,cost2,Lambda1,Lambda2):
+
+	chimax = 0.89
+	chieff = (chi1*cost1+(m2/m1)*chi2*cost2)/(1.+(m2/m1))
+
+	if (m1 < m2) or (np.abs(chi1) > chimax) or (np.abs(chi2) > chimax) or (np.abs(cost1) > 1.) or (np.abs(cost2) > 1.) or (Lambda2 < Lambda1): val = 0.
+	elif np.abs(chieff) <= chimax*(1.-(m2/m1))/(1.+(m2/m1)): val = np.exp(-((Lambda1-Lambda2*(m2/m1)**6)/(np.sqrt(2)*10.))**2)/(10.*np.sqrt(2*np.pi))*dL**2*(1.+dL_to_z(dL))*(m1*m2)**0.6/(m1**2*(m1+m2)**0.2)
+	else: val = (1.-(1.-(m2/m1)/(1.+(m2/m1))))/(1.-np.abs(chieff)/chimax)*np.exp(-((Lambda1-Lambda2*(m2/m1)**6)/(np.sqrt(2)*10.))**2)/(10.*np.sqrt(2*np.pi))*dL**2*(1.+dL_to_z(dL))*(m1*m2)**0.6/(m1**2*(m1+m2)**0.2)
+
+	return val*4.*chimax*np.log(np.abs(chi1*cost1)/chimax)**(-1)*np.log(np.abs(chi2*cost2)/chimax)**(-1)
 
 ### PRIOR LOOKUP FUNCTIONS
     
-binary_mass_priors = {'flat_m1m2': flat_m1m2, 'flat_m1m2det': flat_m1m2det, 'flat_mceta': flat_mceta, 'flat_mcetadet': flat_mcetadet, 'flat_m1m2det_quad_dL': flat_m1m2det_quad_dL, 'flat_m1m2_quad_dL': flat_m1m2_quad_dL, 'flat_mcq': flat_mcq , 'flat_mcqdet': flat_mcqdet, 'flat_mcqdet_quad_dL': flat_mcqdet_quad_dL, 'flat_mcqdet_quad_dL_flat_chieff_aligned': flat_mcqdet_quad_dL_flat_chieff_aligned, 'flat_mcqdet_quad_dL_flat_LambdaT': flat_mcqdet_quad_dL_flat_LambdaT, 'flat_mcqdet_quad_dL_flat_chieff_aligned_flat_LambdaT': flat_mcqdet_quad_dL_flat_chieff_aligned_flat_LambdaT}
+binary_mass_priors = {'flat_m1m2': flat_m1m2, 'flat_m1m2det': flat_m1m2det, 'flat_mceta': flat_mceta, 'flat_mcetadet': flat_mcetadet, 'flat_m1m2det_quad_dL': flat_m1m2det_quad_dL, 'flat_m1m2_quad_dL': flat_m1m2_quad_dL, 'flat_mcq': flat_mcq , 'flat_mcqdet': flat_mcqdet, 'flat_mcqdet_quad_dL': flat_mcqdet_quad_dL, 'flat_mcqdet_quad_dL_flat_chieff_aligned': flat_mcqdet_quad_dL_flat_chieff_aligned, 'flat_mcqdet_quad_dL_flat_LambdaT': flat_mcqdet_quad_dL_flat_LambdaT, 'flat_mcqdet_quad_dL_flat_chieff_aligned_flat_LambdaT': flat_mcqdet_quad_dL_flat_chieff_aligned_flat_LambdaT, 'flat_mcqdet_quad_dL_flat_chieff_flat_LambdaT': flat_mcqdet_quad_dL_flat_chieff_flat_LambdaT}
 
 def get_binary_mass_prior(key):
 
