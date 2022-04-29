@@ -555,11 +555,15 @@ def unif_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa): # uniform di
 	else: Lambda2 = np.array(Lambda2)
 	z = np.zeros(len(m1))
 	
-	common_Lambda1 = Lambda2*(m2/m1)**6
-	common_std = 10.
-	common = (common_Lambda1,common_std)
+	LambdaS1 = Lambda1/(m2/m1)**3
+	LambdaS2 = Lambda2*(m2/m1)**3
+	LambdaS = 0.5*LambdaS1 + 0.5*LambdaS2
+	LambdaA = 0.5*LambdaS1 - 0.5*LambdaS2
 	
-	p = unif_m1m2(m1,m2,lambdaa)*peak_Lambda(Lambda1,common)*unif_Lambda(Lambda2,lambdaa[2:])
+	common_std = 10.
+	common = (0.,common_std)
+	
+	p = unif_m1m2(m1,m2,lambdaa)*unif_Lambda(LambdaS,lambdaa[2:])*peak_Lambda(LambdaA,common)
 	
 	return np.where((m1 < m2) | (Lambda2 < Lambda1), z, p)
 
@@ -575,11 +579,15 @@ def peakcut_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa): # uniform
 	else: Lambda2 = np.array(Lambda2)
 	z = np.zeros(len(m1))
 	
-	common_Lambda1 = Lambda2*(m2/m1)**6
-	common_std = 10.
-	common = (common_Lambda1,common_std)
+	LambdaS1 = Lambda1/(m2/m1)**3
+	LambdaS2 = Lambda2*(m2/m1)**3
+	LambdaS = 0.5*LambdaS1 + 0.5*LambdaS2
+	LambdaA = 0.5*LambdaS1 - 0.5*LambdaS2
 	
-	p = peakcut_m1m2(m1,m2,lambdaa)*peak_Lambda(Lambda1,common)*unif_Lambda(Lambda2,lambdaa[4:])
+	common_std = 10.
+	common = (0.,common_std)
+	
+	p = peakcut_m1m2(m1,m2,lambdaa)*unif_Lambda(LambdaS,lambdaa[4:])*peak_Lambda(LambdaA,common)
 	
 	return np.where((m1 < m2) | (Lambda2 < Lambda1), z, p)
 	
@@ -595,11 +603,15 @@ def bimodcut_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa): # unifor
 	else: Lambda2 = np.array(Lambda2)
 	z = np.zeros(len(m1))
 	
-	common_Lambda1 = Lambda2*(m2/m1)**6
-	common_std = 10.
-	common = (common_Lambda1,common_std)
+	LambdaS1 = Lambda1/(m2/m1)**3
+	LambdaS2 = Lambda2*(m2/m1)**3
+	LambdaS = 0.5*LambdaS1 + 0.5*LambdaS2
+	LambdaA = 0.5*LambdaS1 - 0.5*LambdaS2
 	
-	p = bimodcut_m1m2(m1,m2,lambdaa)*peak_Lambda(Lambda1,common)*unif_Lambda(Lambda2,lambdaa[7:])
+	common_std = 10.
+	common = (0.,common_std)
+	
+	p = bimodcut_m1m2(m1,m2,lambdaa)*unif_Lambda(LambdaS,lambdaa[7:])*peak_Lambda(LambdaA,common)
 	
 	return np.where((m1 < m2) | (Lambda2 < Lambda1), z, p)
 	
