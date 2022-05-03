@@ -399,6 +399,12 @@ def unif_common_chi(chi,chimax,lambdaa): # uniform spin magnitude distribution
 	p = 1./(chimax-chimin)
 	
 	return np.where((chi > chimax) | (chi < chimin), z, p)
+
+def power_chi(chi,lambdaa): # power-law spin magnitude distribution
+
+	p = powerlaw(chi,lambdaa[:3])
+
+	return p
 	
 ### BINARY SPIN DISTRIBUTIONS
 
@@ -410,6 +416,17 @@ def unif_chi1_unif_chi2(chi1,chi2,lambdaa): # uniform distribution in component 
 	else: chi2 = np.array(chi2)
 	
 	p = unif_chi(chi1,lambdaa)*unif_chi(chi2,lambdaa)
+	
+	return p
+	
+def power_chi1_power_chi2(chi1,chi2,lambdaa): # power-law distribution in component spin magnitudes
+
+	if np.isscalar(chi1): chi1 = np.array([chi1])
+	else: chi1 = np.array(chi1)
+	if np.isscalar(chi2): chi2 = np.array([chi2])
+	else: chi2 = np.array(chi2)
+	
+	p = power_chi(chi1,lambdaa[:3])*power_chi(chi2,lambdaa[3:])
 	
 	return p
 	
@@ -499,6 +516,54 @@ def bimodcut_m1m2_common_chi1chi2(m1,m2,chi1,chi2,lambdaa): # uniform distributi
 	common2 = (lambdaa[7],lambdaa[8])
 	
 	p = bimodcut_m1m2(m1,m2,lambdaa)*unif_common_chi(chi1,chi1max,common1)*unif_common_chi(chi2,chi2max,common2)
+	
+	return np.where(m1 < m2, z, p)
+
+def unif_m1m2_power_chi1_power_chi2(m1,m2,chi1,chi2,lambdaa): # bimodal distribution in component masses, with one fast and one slow spin
+
+	if np.isscalar(m1): m1 = np.array([m1])
+	else: m1 = np.array(m1)
+	if np.isscalar(m2): m2 = np.array([m2])
+	else: m2 = np.array(m2)
+	if np.isscalar(chi1): chi1 = np.array([chi1])
+	else: chi1 = np.array(chi1)
+	if np.isscalar(chi2): chi2 = np.array([chi2])
+	else: chi2 = np.array(chi2)
+	z = np.zeros(len(m1))
+	
+	p = unif_m1m2(m1,m2,lambdaa)*power_chi1_power_chi2(chi1,chi2,lambdaa[2:])
+	
+	return np.where(m1 < m2, z, p)
+	
+def peakcut_m1m2_power_chi1_power_chi2(m1,m2,chi1,chi2,lambdaa): # bimodal distribution in component masses, with one fast and one slow spin
+
+	if np.isscalar(m1): m1 = np.array([m1])
+	else: m1 = np.array(m1)
+	if np.isscalar(m2): m2 = np.array([m2])
+	else: m2 = np.array(m2)
+	if np.isscalar(chi1): chi1 = np.array([chi1])
+	else: chi1 = np.array(chi1)
+	if np.isscalar(chi2): chi2 = np.array([chi2])
+	else: chi2 = np.array(chi2)
+	z = np.zeros(len(m1))
+	
+	p = peakcut_m1m2(m1,m2,lambdaa)*power_chi1_power_chi2(chi1,chi2,lambdaa[4:])
+	
+	return np.where(m1 < m2, z, p)
+	
+def bimodcut_m1m2_power_chi1_power_chi2(m1,m2,chi1,chi2,lambdaa): # bimodal distribution in component masses, with one fast and one slow spin
+
+	if np.isscalar(m1): m1 = np.array([m1])
+	else: m1 = np.array(m1)
+	if np.isscalar(m2): m2 = np.array([m2])
+	else: m2 = np.array(m2)
+	if np.isscalar(chi1): chi1 = np.array([chi1])
+	else: chi1 = np.array(chi1)
+	if np.isscalar(chi2): chi2 = np.array([chi2])
+	else: chi2 = np.array(chi2)
+	z = np.zeros(len(m1))
+	
+	p = bimodcut_m1m2(m1,m2,lambdaa)*power_chi1_power_chi2(chi1,chi2,lambdaa[7:])
 	
 	return np.where(m1 < m2, z, p)
 
@@ -836,11 +901,154 @@ def bimodcut_m1m2_common_chi1chi2_common_Lambda1Lambda2(m1,m2,chi1,chi2,Lambda1,
 
 	return np.where((m1 < m2) | (Lambda2 < Lambda1), z, p)
 
+def unif_m1m2_power_chi1_power_chi2_common_Lambda1Lambda2(m1,m2,chi1,chi2,Lambda1,Lambda2,lambdaa): # uniform mass model with random pairing, power-law uncorrelated spins and common-EOS approximated tidal deformabilities
+
+	if np.isscalar(m1): m1 = np.array([m1])
+	else: m1 = np.array(m1)
+	if np.isscalar(m2): m2 = np.array([m2])
+	else: m2 = np.array(m2)
+	if np.isscalar(chi1): chi1 = np.array([chi1])
+	else: chi1 = np.array(chi1)
+	if np.isscalar(chi2): chi2 = np.array([chi2])
+	else: chi2 = np.array(chi2)
+	if np.isscalar(Lambda1): Lambda1 = np.array([Lambda1])
+	else: Lambda1 = np.array(Lambda1)
+	if np.isscalar(Lambda2): Lambda2 = np.array([Lambda2])
+	else: Lambda2 = np.array(Lambda2)
+	z = np.zeros(len(m1))
+	
+	p = unif_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa[:2]+lambdaa[8:])*power_chi1_power_chi2(chi1,chi2,lambdaa[2:])
+
+	return np.where((m1 < m2) | (Lambda2 < Lambda1), z, p)
+	
+def peakcut_m1m2_power_chi1_power_chi2_common_Lambda1Lambda2(m1,m2,chi1,chi2,Lambda1,Lambda2,lambdaa): # peak mass model with random pairing, power-law uncorrelated spins and common-EOS approximated tidal deformabilities
+
+	if np.isscalar(m1): m1 = np.array([m1])
+	else: m1 = np.array(m1)
+	if np.isscalar(m2): m2 = np.array([m2])
+	else: m2 = np.array(m2)
+	if np.isscalar(chi1): chi1 = np.array([chi1])
+	else: chi1 = np.array(chi1)
+	if np.isscalar(chi2): chi2 = np.array([chi2])
+	else: chi2 = np.array(chi2)
+	if np.isscalar(Lambda1): Lambda1 = np.array([Lambda1])
+	else: Lambda1 = np.array(Lambda1)
+	if np.isscalar(Lambda2): Lambda2 = np.array([Lambda2])
+	else: Lambda2 = np.array(Lambda2)
+	z = np.zeros(len(m1))
+	
+	p = peakcut_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa[:4]+lambdaa[10:])*power_chi1_power_chi2(chi1,chi2,lambdaa[4:])
+
+	return np.where((m1 < m2) | (Lambda2 < Lambda1), z, p)
+
+def bimodcut_m1m2_power_chi1_power_chi2_common_Lambda1Lambda2(m1,m2,chi1,chi2,Lambda1,Lambda2,lambdaa): # bimodal mass model with random pairing, power-law uncorrelated spins and common-EOS approximated tidal deformabilities
+
+	if np.isscalar(m1): m1 = np.array([m1])
+	else: m1 = np.array(m1)
+	if np.isscalar(m2): m2 = np.array([m2])
+	else: m2 = np.array(m2)
+	if np.isscalar(chi1): chi1 = np.array([chi1])
+	else: chi1 = np.array(chi1)
+	if np.isscalar(chi2): chi2 = np.array([chi2])
+	else: chi2 = np.array(chi2)
+	if np.isscalar(Lambda1): Lambda1 = np.array([Lambda1])
+	else: Lambda1 = np.array(Lambda1)
+	if np.isscalar(Lambda2): Lambda2 = np.array([Lambda2])
+	else: Lambda2 = np.array(Lambda2)
+	z = np.zeros(len(m1))
+	
+	p = bimodcut_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa[:7]+lambdaa[13:])*power_chi1_power_chi2(chi1,chi2,lambdaa[7:])
+
+	return np.where((m1 < m2) | (Lambda2 < Lambda1), z, p)
+
+### BINARY MASS, SPIN (MAGNITUDE/ORIENTATION) AND TIDAL DEFORMABILITY DISTRIBUTIONS
+
+def unif_m1m2_dns_spins_common_Lambda1Lambda2(m1,m2,chi1,chi2,cost1,cost2,Lambda1,Lambda2,lambdaa): # uniform mass model with random pairing, power-law uncorrelated spins and common-EOS approximated tidal deformabilities
+
+	if np.isscalar(m1): m1 = np.array([m1])
+	else: m1 = np.array(m1)
+	if np.isscalar(m2): m2 = np.array([m2])
+	else: m2 = np.array(m2)
+	if np.isscalar(chi1): chi1 = np.array([chi1])
+	else: chi1 = np.array(chi1)
+	if np.isscalar(chi2): chi2 = np.array([chi2])
+	else: chi2 = np.array(chi2)
+	if np.isscalar(cost1): cost1 = np.array([cost1])
+	else: cost1 = np.array(cost1)
+	if np.isscalar(cost2): cost2 = np.array([cost2])
+	else: cost2 = np.array(cost2)
+	if np.isscalar(Lambda1): Lambda1 = np.array([Lambda1])
+	else: Lambda1 = np.array(Lambda1)
+	if np.isscalar(Lambda2): Lambda2 = np.array([Lambda2])
+	else: Lambda2 = np.array(Lambda2)
+	z = np.zeros(len(m1))
+	
+	dns_cost1_std = np.pi/18.
+	dns_cost1 = (0.,dns_cost1_std)
+	
+	p = unif_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa[:2]+lambdaa[8:])*power_chi1_power_chi2(chi1,chi2,lambdaa[2:])*gaussian(cost1,dns_cost1)
+
+	return np.where((m1 < m2) | (Lambda2 < Lambda1), z, p)
+
+def peakcut_m1m2_dns_spins_common_Lambda1Lambda2(m1,m2,chi1,chi2,cost1,cost2,Lambda1,Lambda2,lambdaa): # peak mass model with random pairing, power-law uncorrelated spins and common-EOS approximated tidal deformabilities
+
+	if np.isscalar(m1): m1 = np.array([m1])
+	else: m1 = np.array(m1)
+	if np.isscalar(m2): m2 = np.array([m2])
+	else: m2 = np.array(m2)
+	if np.isscalar(chi1): chi1 = np.array([chi1])
+	else: chi1 = np.array(chi1)
+	if np.isscalar(chi2): chi2 = np.array([chi2])
+	else: chi2 = np.array(chi2)
+	if np.isscalar(cost1): cost1 = np.array([cost1])
+	else: cost1 = np.array(cost1)
+	if np.isscalar(cost2): cost2 = np.array([cost2])
+	else: cost2 = np.array(cost2)
+	if np.isscalar(Lambda1): Lambda1 = np.array([Lambda1])
+	else: Lambda1 = np.array(Lambda1)
+	if np.isscalar(Lambda2): Lambda2 = np.array([Lambda2])
+	else: Lambda2 = np.array(Lambda2)
+	z = np.zeros(len(m1))
+	
+	dns_cost1_std = np.pi/18.
+	dns_cost1 = (0.,dns_cost1_std)
+	
+	p = peakcut_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa[:4]+lambdaa[10:])*power_chi1_power_chi2(chi1,chi2,lambdaa[4:])*gaussian(cost1,dns_cost1)
+
+	return np.where((m1 < m2) | (Lambda2 < Lambda1), z, p)
+
+def bimodcut_m1m2_dns_spins_common_Lambda1Lambda2(m1,m2,chi1,chi2,cost1,cost2,Lambda1,Lambda2,lambdaa): # bimodal mass model with random pairing, power-law uncorrelated spins and common-EOS approximated tidal deformabilities
+
+	if np.isscalar(m1): m1 = np.array([m1])
+	else: m1 = np.array(m1)
+	if np.isscalar(m2): m2 = np.array([m2])
+	else: m2 = np.array(m2)
+	if np.isscalar(chi1): chi1 = np.array([chi1])
+	else: chi1 = np.array(chi1)
+	if np.isscalar(chi2): chi2 = np.array([chi2])
+	else: chi2 = np.array(chi2)
+	if np.isscalar(cost1): cost1 = np.array([cost1])
+	else: cost1 = np.array(cost1)
+	if np.isscalar(cost2): cost2 = np.array([cost2])
+	else: cost2 = np.array(cost2)
+	if np.isscalar(Lambda1): Lambda1 = np.array([Lambda1])
+	else: Lambda1 = np.array(Lambda1)
+	if np.isscalar(Lambda2): Lambda2 = np.array([Lambda2])
+	else: Lambda2 = np.array(Lambda2)
+	z = np.zeros(len(m1))
+	
+	dns_cost1_std = np.pi/18.
+	dns_cost1 = (0.,dns_cost1_std)
+	
+	p = bimodcut_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa[:7]+lambdaa[13:])*power_chi1_power_chi2(chi1,chi2,lambdaa[7:])*gaussian(cost1,dns_cost1)
+
+	return np.where((m1 < m2) | (Lambda2 < Lambda1), z, p)
+
 # LOOKUP FUNCTIONS
 
-pop_priors = {'unif_mass': unif_mass, 'peak_mass': peak_mass, 'bimod_mass': bimod_mass, 'peakcut_mass': peakcut_mass, 'bimodcut_mass': bimodcut_mass, 'unif_m1m2': unif_m1m2, 'peak_m1m2': peak_m1m2, 'bimod_m1m2': bimod_m1m2, 'power_m1m2': power_m1m2, 'peakcut_m1m2': peakcut_m1m2, 'bimodcut_m1m2': bimodcut_m1m2, 'unif_m1m2_qpair': unif_m1m2_qpair, 'power_m1m2_qpair': power_m1m2_qpair, 'peakcut_m1m2_qpair': peakcut_m1m2_qpair, 'bimodcut_m1m2_qpair': bimodcut_m1m2_qpair, 'unif_m1_unif_m2': unif_m1_unif_m2, 'unif_m1_unif_m2_qpair': unif_m1_unif_m2_qpair, 'unif_m1_power_m2': unif_m1_power_m2, 'unif_m1_power_m2_qpair': unif_m1_power_m2_qpair, 'unif_m1_peakcut_m2': unif_m1_peakcut_m2, 'unif_m1_peakcut_m2_qpair': unif_m1_peakcut_m2_qpair, 'unif_m1_bimodcut_m2': unif_m1_bimodcut_m2, 'unif_m1_bimodcut_m2_qpair': unif_m1_bimodcut_m2_qpair, 'power_m1_unif_m2_qpair': power_m1_unif_m2_qpair, 'bimodcut_m1_unif_m2_qpair': bimodcut_m1_unif_m2_qpair, 'unif_chi': unif_chi, 'unif_chi1_unif_chi2': unif_chi1_unif_chi2, 'unif_m1m2_common_chi1chi2': unif_m1m2_common_chi1chi2, 'peakcut_m1m2_common_chi1chi2': peakcut_m1m2_common_chi1chi2, 'bimodcut_m1m2_common_chi1chi2': bimodcut_m1m2_common_chi1chi2, 'unif_Lambda': unif_Lambda, 'peak_Lambda': peak_Lambda, 'unif_Lambda1_unif_Lambda2': unif_Lambda1_unif_Lambda2, 'unif_Lambda1Lambda2': unif_Lambda1Lambda2, 'unif_m1m2_common_Lambda1Lambda2': unif_m1m2_common_Lambda1Lambda2, 'peakcut_m1m2_common_Lambda1Lambda2': peakcut_m1m2_common_Lambda1Lambda2, 'bimodcut_m1m2_common_Lambda1Lambda2': bimodcut_m1m2_common_Lambda1Lambda2, 'unif_m1m2_unif_chi1_unif_chi2_unif_Lambda1Lambda2': unif_m1m2_unif_chi1_unif_chi2_unif_Lambda1Lambda2, 'peakcut_m1m2_unif_chi1_unif_chi2_unif_Lambda1Lambda2': peakcut_m1m2_unif_chi1_unif_chi2_unif_Lambda1Lambda2, 'bimodcut_m1m2_unif_chi1_unif_chi2_unif_Lambda1Lambda2': bimodcut_m1m2_unif_chi1_unif_chi2_unif_Lambda1Lambda2, 'unif_m1m2_unif_chi1_unif_chi2_common_Lambda1Lambda2': unif_m1m2_unif_chi1_unif_chi2_common_Lambda1Lambda2, 'peakcut_m1m2_unif_chi1_unif_chi2_common_Lambda1Lambda2': peakcut_m1m2_unif_chi1_unif_chi2_common_Lambda1Lambda2, 'bimodcut_m1m2_unif_chi1_unif_chi2_common_Lambda1Lambda2': bimodcut_m1m2_unif_chi1_unif_chi2_common_Lambda1Lambda2, 'unif_m1m2_common_chi1chi2_common_Lambda1Lambda2': unif_m1m2_common_chi1chi2_common_Lambda1Lambda2, 'peakcut_m1m2_common_chi1chi2_common_Lambda1Lambda2': peakcut_m1m2_common_chi1chi2_common_Lambda1Lambda2, 'bimodcut_m1m2_common_chi1chi2_common_Lambda1Lambda2': bimodcut_m1m2_common_chi1chi2_common_Lambda1Lambda2}
+pop_priors = {'unif_mass': unif_mass, 'peak_mass': peak_mass, 'bimod_mass': bimod_mass, 'peakcut_mass': peakcut_mass, 'bimodcut_mass': bimodcut_mass, 'unif_m1m2': unif_m1m2, 'peak_m1m2': peak_m1m2, 'bimod_m1m2': bimod_m1m2, 'power_m1m2': power_m1m2, 'peakcut_m1m2': peakcut_m1m2, 'bimodcut_m1m2': bimodcut_m1m2, 'unif_m1m2_qpair': unif_m1m2_qpair, 'power_m1m2_qpair': power_m1m2_qpair, 'peakcut_m1m2_qpair': peakcut_m1m2_qpair, 'bimodcut_m1m2_qpair': bimodcut_m1m2_qpair, 'unif_m1_unif_m2': unif_m1_unif_m2, 'unif_m1_unif_m2_qpair': unif_m1_unif_m2_qpair, 'unif_m1_power_m2': unif_m1_power_m2, 'unif_m1_power_m2_qpair': unif_m1_power_m2_qpair, 'unif_m1_peakcut_m2': unif_m1_peakcut_m2, 'unif_m1_peakcut_m2_qpair': unif_m1_peakcut_m2_qpair, 'unif_m1_bimodcut_m2': unif_m1_bimodcut_m2, 'unif_m1_bimodcut_m2_qpair': unif_m1_bimodcut_m2_qpair, 'power_m1_unif_m2_qpair': power_m1_unif_m2_qpair, 'bimodcut_m1_unif_m2_qpair': bimodcut_m1_unif_m2_qpair, 'unif_chi': unif_chi, 'unif_chi1_unif_chi2': unif_chi1_unif_chi2, 'unif_m1m2_common_chi1chi2': unif_m1m2_common_chi1chi2, 'peakcut_m1m2_common_chi1chi2': peakcut_m1m2_common_chi1chi2, 'bimodcut_m1m2_common_chi1chi2': bimodcut_m1m2_common_chi1chi2, 'unif_Lambda': unif_Lambda, 'peak_Lambda': peak_Lambda, 'unif_Lambda1_unif_Lambda2': unif_Lambda1_unif_Lambda2, 'unif_Lambda1Lambda2': unif_Lambda1Lambda2, 'unif_m1m2_common_Lambda1Lambda2': unif_m1m2_common_Lambda1Lambda2, 'peakcut_m1m2_common_Lambda1Lambda2': peakcut_m1m2_common_Lambda1Lambda2, 'bimodcut_m1m2_common_Lambda1Lambda2': bimodcut_m1m2_common_Lambda1Lambda2, 'unif_m1m2_unif_chi1_unif_chi2_unif_Lambda1Lambda2': unif_m1m2_unif_chi1_unif_chi2_unif_Lambda1Lambda2, 'peakcut_m1m2_unif_chi1_unif_chi2_unif_Lambda1Lambda2': peakcut_m1m2_unif_chi1_unif_chi2_unif_Lambda1Lambda2, 'bimodcut_m1m2_unif_chi1_unif_chi2_unif_Lambda1Lambda2': bimodcut_m1m2_unif_chi1_unif_chi2_unif_Lambda1Lambda2, 'unif_m1m2_unif_chi1_unif_chi2_common_Lambda1Lambda2': unif_m1m2_unif_chi1_unif_chi2_common_Lambda1Lambda2, 'peakcut_m1m2_unif_chi1_unif_chi2_common_Lambda1Lambda2': peakcut_m1m2_unif_chi1_unif_chi2_common_Lambda1Lambda2, 'bimodcut_m1m2_unif_chi1_unif_chi2_common_Lambda1Lambda2': bimodcut_m1m2_unif_chi1_unif_chi2_common_Lambda1Lambda2, 'unif_m1m2_common_chi1chi2_common_Lambda1Lambda2': unif_m1m2_common_chi1chi2_common_Lambda1Lambda2, 'peakcut_m1m2_common_chi1chi2_common_Lambda1Lambda2': peakcut_m1m2_common_chi1chi2_common_Lambda1Lambda2, 'bimodcut_m1m2_common_chi1chi2_common_Lambda1Lambda2': bimodcut_m1m2_common_chi1chi2_common_Lambda1Lambda2,'bimodcut_m1m2_dns_spins_common_Lambda1Lambda2': bimodcut_m1m2_dns_spins_common_Lambda1Lambda2,'peakcut_m1m2_dns_spins_common_Lambda1Lambda2': peakcut_m1m2_dns_spins_common_Lambda1Lambda2, 'unif_m1m2_dns_spins_common_Lambda1Lambda2': unif_m1m2_dns_spins_common_Lambda1Lambda2, 'bimodcut_m1m2_power_chi1_power_chi2_common_Lambda1Lambda2': bimodcut_m1m2_power_chi1_power_chi2_common_Lambda1Lambda2, 'peakcut_m1m2_power_chi1_power_chi2_common_Lambda1Lambda2': peakcut_m1m2_power_chi1_power_chi2_common_Lambda1Lambda2, 'unif_m1m2_power_chi1_power_chi2_common_Lambda1Lambda2': unif_m1m2_power_chi1_power_chi2_common_Lambda1Lambda2, 'bimodcut_m1m2_power_chi1_power_chi2': bimodcut_m1m2_power_chi1_power_chi2, 'peakcut_m1m2_power_chi1_power_chi2': peakcut_m1m2_power_chi1_power_chi2, 'unif_m1m2_power_chi1_power_chi2': unif_m1m2_power_chi1_power_chi2, 'power_chi1_power_chi2': power_chi1_power_chi2, 'power_chi': power_chi}
 
-pop_params = {'unif_mass': 'mmin,mmax', 'peak_mass': 'mu,sigma', 'bimod_mass': 'mu1,sigma1,mu2,sigma2,w', 'peakcut_mass': 'mu,sigma,mmin,mmax', 'bimodcut_mass': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax', 'unif_m1m2': 'mmin,mmax', 'peak_m1m2': 'mu,sigma', 'bimod_m1m2': 'mu1,sigma1,mu2,sigma2,w', 'power_m1m2': 'alpha,mmin,mmax', 'peakcut_m1m2': 'mu,sigma,mmin,mmax', 'bimodcut_m1m2': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax', 'unif_m1m2_qpair': 'mmin,mmax,beta', 'power_m1m2_qpair': 'alpha,mmin,mmax,beta', 'peakcut_m1m2_qpair': 'mu,sigma,mmin,mmax,beta', 'bimodcut_m1m2_qpair': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax,beta', 'unif_m1_unif_m2': 'mmin,mmax', 'unif_m1_unif_m2_qpair': 'mmin,mmax,beta', 'unif_m1_power_m2': 'alpha,mmin,mmax', 'unif_m1_power_m2_qpair': 'alpha,mmin,mmax,beta', 'unif_m1_peakcut_m2': 'mu,sigma,mmin,mmax', 'unif_m1_peakcut_m2_qpair': 'mu,sigma,mmin,mmax,beta', 'unif_m1_bimodcut_m2': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax', 'unif_m1_bimodcut_m2_qpair': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax,beta', 'power_m1_unif_m2_qpair': 'alpha,mmin,mmax,beta', 'bimodcut_m1_unif_m2_qpair': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax,beta', 'unif_chi': 'chimin,chimax', 'unif_chi1_unif_chi2': 'chimin,chimax', 'unif_m1m2_common_chi1chi2': 'mmin,mmax,chimin,chimax', 'peakcut_m1m2_common_chi1chi2': 'mu,sigma,mmin,mmax,chimin,chimax', 'bimodcut_m1m2_common_chi1chi2': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax,chimin,chimax', 'unif_Lambda': 'Lmin,Lmax', 'peak_Lambda': 'Lmu,Lsigma', 'unif_Lambda1_unif_Lambda2': 'Lmin,Lmax', 'unif_Lambda1Lambda2': 'Lmin,Lmax', 'unif_m1m2_common_Lambda1Lambda2': 'mmin,mmax,Lmin,Lmax', 'peakcut_m1m2_common_Lambda1Lambda2': 'mu,sigma,mmin,mmax,Lmin,Lmax', 'bimodcut_m1m2_common_Lambda1Lambda2': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax,Lmin,Lmax', 'unif_m1m2_unif_chi1_unif_chi2_unif_Lambda1Lambda2': 'mmin,mmax,chimin,chimax,Lmin,Lmax', 'peakcut_m1m2_unif_chi1_unif_chi2_unif_Lambda1Lambda2': 'mu,sigma,mmin,mmax,chimin,chimax,Lmin,Lmax', 'bimodcut_m1m2_unif_chi1_unif_chi2_unif_Lambda1Lambda2': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax,chimin,chimax,Lmin,Lmax', 'unif_m1m2_unif_chi1_unif_chi2_common_Lambda1Lambda2': 'mmin,mmax,chimin,chimax,Lmin,Lmax', 'peakcut_m1m2_unif_chi1_unif_chi2_common_Lambda1Lambda2': 'mu,sigma,mmin,mmax,chimin,chimax,Lmin,Lmax', 'bimodcut_m1m2_unif_chi1_unif_chi2_common_Lambda1Lambda2': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax,chimin,chimax,Lmin,Lmax', 'unif_m1m2_common_chi1chi2_common_Lambda1Lambda2': 'mmin,mmax,chimin,chimax,Lmin,Lmax', 'peakcut_m1m2_common_chi1chi2_common_Lambda1Lambda2': 'mu,sigma,mmin,mmax,chimin,chimax,Lmin,Lmax', 'bimodcut_m1m2_common_chi1chi2_common_Lambda1Lambda2': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax,chimin,chimax,Lmin,Lmax'}
+pop_params = {'unif_mass': 'mmin,mmax', 'peak_mass': 'mu,sigma', 'bimod_mass': 'mu1,sigma1,mu2,sigma2,w', 'peakcut_mass': 'mu,sigma,mmin,mmax', 'bimodcut_mass': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax', 'unif_m1m2': 'mmin,mmax', 'peak_m1m2': 'mu,sigma', 'bimod_m1m2': 'mu1,sigma1,mu2,sigma2,w', 'power_m1m2': 'alpha,mmin,mmax', 'peakcut_m1m2': 'mu,sigma,mmin,mmax', 'bimodcut_m1m2': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax', 'unif_m1m2_qpair': 'mmin,mmax,beta', 'power_m1m2_qpair': 'alpha,mmin,mmax,beta', 'peakcut_m1m2_qpair': 'mu,sigma,mmin,mmax,beta', 'bimodcut_m1m2_qpair': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax,beta', 'unif_m1_unif_m2': 'mmin,mmax', 'unif_m1_unif_m2_qpair': 'mmin,mmax,beta', 'unif_m1_power_m2': 'alpha,mmin,mmax', 'unif_m1_power_m2_qpair': 'alpha,mmin,mmax,beta', 'unif_m1_peakcut_m2': 'mu,sigma,mmin,mmax', 'unif_m1_peakcut_m2_qpair': 'mu,sigma,mmin,mmax,beta', 'unif_m1_bimodcut_m2': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax', 'unif_m1_bimodcut_m2_qpair': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax,beta', 'power_m1_unif_m2_qpair': 'alpha,mmin,mmax,beta', 'bimodcut_m1_unif_m2_qpair': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax,beta', 'unif_chi': 'chimin,chimax', 'unif_chi1_unif_chi2': 'chimin,chimax', 'unif_m1m2_common_chi1chi2': 'mmin,mmax,chimin,chimax', 'peakcut_m1m2_common_chi1chi2': 'mu,sigma,mmin,mmax,chimin,chimax', 'bimodcut_m1m2_common_chi1chi2': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax,chimin,chimax', 'unif_Lambda': 'Lmin,Lmax', 'peak_Lambda': 'Lmu,Lsigma', 'unif_Lambda1_unif_Lambda2': 'Lmin,Lmax', 'unif_Lambda1Lambda2': 'Lmin,Lmax', 'unif_m1m2_common_Lambda1Lambda2': 'mmin,mmax,Lmin,Lmax', 'peakcut_m1m2_common_Lambda1Lambda2': 'mu,sigma,mmin,mmax,Lmin,Lmax', 'bimodcut_m1m2_common_Lambda1Lambda2': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax,Lmin,Lmax', 'unif_m1m2_unif_chi1_unif_chi2_unif_Lambda1Lambda2': 'mmin,mmax,chimin,chimax,Lmin,Lmax', 'peakcut_m1m2_unif_chi1_unif_chi2_unif_Lambda1Lambda2': 'mu,sigma,mmin,mmax,chimin,chimax,Lmin,Lmax', 'bimodcut_m1m2_unif_chi1_unif_chi2_unif_Lambda1Lambda2': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax,chimin,chimax,Lmin,Lmax', 'unif_m1m2_unif_chi1_unif_chi2_common_Lambda1Lambda2': 'mmin,mmax,chimin,chimax,Lmin,Lmax', 'peakcut_m1m2_unif_chi1_unif_chi2_common_Lambda1Lambda2': 'mu,sigma,mmin,mmax,chimin,chimax,Lmin,Lmax', 'bimodcut_m1m2_unif_chi1_unif_chi2_common_Lambda1Lambda2': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax,chimin,chimax,Lmin,Lmax', 'unif_m1m2_common_chi1chi2_common_Lambda1Lambda2': 'mmin,mmax,chimin,chimax,Lmin,Lmax', 'peakcut_m1m2_common_chi1chi2_common_Lambda1Lambda2': 'mu,sigma,mmin,mmax,chimin,chimax,Lmin,Lmax', 'bimodcut_m1m2_common_chi1chi2_common_Lambda1Lambda2': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax,chimin,chimax,Lmin,Lmax','bimodcut_m1m2_dns_spins_common_Lambda1Lambda2': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax,gamma1,chi1min,chi1max,gamma2,chi2min,chi2max,Lmin,Lmax','peakcut_m1m2_dns_spins_common_Lambda1Lambda2': 'mu,sigma,mmin,mmax,gamma1,chi1min,chi1max,gamma2,chi2min,chi2max,Lmin,Lmax', 'unif_m1m2_dns_spins_common_Lambda1Lambda2': 'mmin,mmax,gamma1,chi1min,chi1max,gamma2,chi2min,chi2max,Lmin,Lmax', 'bimodcut_m1m2_power_chi1_power_chi2_common_Lambda1Lambda2': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax,gamma1,chi1min,chi1max,gamma2,chi2min,chi2max,Lmin,Lmax', 'peakcut_m1m2_power_chi1_power_chi2_common_Lambda1Lambda2': 'mu,sigma,mmin,mmax,gamma1,chi1min,chi1max,gamma2,chi2min,chi2max,Lmin,Lmax', 'unif_m1m2_power_chi1_power_chi2_common_Lambda1Lambda2': 'mmin,mmax,gamma1,chi1min,chi1max,gamma2,chi2min,chi2max,Lmin,Lmax', 'bimodcut_m1m2_power_chi1_power_chi2': 'mu1,sigma1,mu2,sigma2,w,mmin,mmax,gamma1,chi1min,chi1max,gamma2,chi2min,chi2max', 'peakcut_m1m2_power_chi1_power_chi2': 'mu,sigma,mmin,mmax,gamma1,chi1min,chi1max,gamma2,chi2min,chi2max', 'unif_m1m2_power_chi1_power_chi2': 'mmin,mmax,gamma1,chi1min,chi1max,gamma2,chi2min,chi2max', 'power_chi1_power_chi2': 'gamma1,chi1min,chi1max,gamma2,chi2min,chi2max', 'power_chi': 'gamma,chimin,chimax'}
 
 def get_pop_prior(key):
 
