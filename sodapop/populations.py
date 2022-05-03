@@ -421,12 +421,15 @@ def unif_chi1_unif_chi2(chi1,chi2,lambdaa): # uniform distribution in component 
 	
 def power_chi1_power_chi2(chi1,chi2,lambdaa): # power-law distribution in component spin magnitudes
 
+	gamma1, chi1min, chi1max = lambdaa[:3]
+	gamma2, chi2min, chi2max = lambdaa[3:6]
+
 	if np.isscalar(chi1): chi1 = np.array([chi1])
 	else: chi1 = np.array(chi1)
 	if np.isscalar(chi2): chi2 = np.array([chi2])
 	else: chi2 = np.array(chi2)
 	
-	p = power_chi(chi1,lambdaa[:3])*power_chi(chi2,lambdaa[3:])
+	p = power_chi(1.-chi1,(-gamma1,1.-chi1max,1.-chi1min))*power_chi(1.-chi2,(-gamma2,1.-chi2max,1.-chi2min))
 	
 	return p
 	
