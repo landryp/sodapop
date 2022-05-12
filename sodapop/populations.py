@@ -986,10 +986,10 @@ def unif_m1m2_dns_spins_common_Lambda1Lambda2(m1,m2,chi1,chi2,cost1,cost2,Lambda
 	else: Lambda2 = np.array(Lambda2)
 	z = np.zeros(len(m1))
 	
-	dns_cost1_std = np.pi/18.
-	dns_cost1 = (0.,dns_cost1_std)
+	dns_t1_std = np.pi/6.
+	dns_t1 = (0.,dns_t1_std)
 	
-	p = unif_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa[:2]+lambdaa[8:])*power_chi1_power_chi2(chi1,chi2,lambdaa[2:])*gaussian(cost1,dns_cost1)
+	p = unif_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa[:2]+lambdaa[8:])*power_chi1_power_chi2(chi1,chi2,lambdaa[2:])*gaussian(np.arccos(cost1),dns_t1)/np.sin(np.arccos(cost1))
 
 	return np.where((m1 < m2) | (Lambda2 < Lambda1), z, p)
 
@@ -1013,10 +1013,10 @@ def peakcut_m1m2_dns_spins_common_Lambda1Lambda2(m1,m2,chi1,chi2,cost1,cost2,Lam
 	else: Lambda2 = np.array(Lambda2)
 	z = np.zeros(len(m1))
 	
-	dns_cost1_std = np.pi/18.
-	dns_cost1 = (0.,dns_cost1_std)
+	dns_t1_std = np.pi/6.
+	dns_t1 = (0.,dns_t1_std)
 	
-	p = peakcut_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa[:4]+lambdaa[10:])*power_chi1_power_chi2(chi1,chi2,lambdaa[4:])*gaussian(cost1,dns_cost1)
+	p = peakcut_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa[:4]+lambdaa[10:])*power_chi1_power_chi2(chi1,chi2,lambdaa[4:])*gaussian(np.arccos(cost1),dns_t1)/np.sin(np.arccos(cost1))
 
 	return np.where((m1 < m2) | (Lambda2 < Lambda1), z, p)
 
@@ -1040,10 +1040,10 @@ def bimodcut_m1m2_dns_spins_common_Lambda1Lambda2(m1,m2,chi1,chi2,cost1,cost2,La
 	else: Lambda2 = np.array(Lambda2)
 	z = np.zeros(len(m1))
 	
-	dns_cost1_std = (1.-np.cos(np.pi/6.))/3.
-	dns_cost1 = (1.,dns_cost1_std)
+	dns_t1_std = np.pi/6.
+	dns_t1 = (0.,dns_t1_std)
 	
-	p = bimodcut_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa[:7]+lambdaa[13:])*power_chi1_power_chi2(chi1,chi2,lambdaa[7:])*gaussian(cost1,dns_cost1)
+	p = bimodcut_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa[:7]+lambdaa[13:])*power_chi1_power_chi2(chi1,chi2,lambdaa[7:])*gaussian(np.arccos(cost1),dns_t1)/np.sin(np.arccos(cost1))
 
 	return np.where((m1 < m2) | (Lambda2 < Lambda1), z, p)
 
