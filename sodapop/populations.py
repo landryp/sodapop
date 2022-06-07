@@ -402,9 +402,19 @@ def unif_common_chi(chi,chimax,lambdaa): # uniform spin magnitude distribution
 
 def power_chi(chi,lambdaa): # power-law spin magnitude distribution
 
-	p = powerlaw(chi,lambdaa[:3])
+	gamma, chimin, chimax = lambdaa[:3]
 
-	return p
+	if np.isscalar(chi): chi = np.array([chi])
+	else: chi = np.array(chi)
+	if np.isscalar(chimin): chimin = np.array([chimin])
+	else: chimin = np.array(chimin)
+	if np.isscalar(chimax): chimax = np.array([chimax])
+	else: chimax = np.array(chimax)
+	z = np.zeros(len(chi))
+
+	p = chimax**(-gamma)/(chimax-chimin)**(1.-gamma)*(1.-gamma)*(1.-chi/chimax)**(-gamma)
+
+	return np.where((chi > chimax) | (chi < chimin), z, p)
 	
 ### BINARY SPIN DISTRIBUTIONS
 
@@ -429,7 +439,7 @@ def power_chi1_power_chi2(chi1,chi2,lambdaa): # power-law distribution in compon
 	if np.isscalar(chi2): chi2 = np.array([chi2])
 	else: chi2 = np.array(chi2)
 	
-	p = power_chi(1.-chi1/chi1max,(-gamma1,chi1max**(gamma1/(gamma1-1))/(chi1max-chi1min),0.))*power_chi(1.-chi2/chi2max,(-gamma2,chi2max**(gamma2/(gamma2-1))/(chi2max-chi2min),0.))
+	p = power_chi(chi1,lambdaa[:3])*power_chi(chi2,lambdaa[3:6])
 	
 	return p
 	
