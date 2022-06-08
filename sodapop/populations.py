@@ -649,11 +649,13 @@ def unif_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa): # uniform di
 	else: Lambda2 = np.array(Lambda2)
 	z = np.zeros(len(m1))
 	
+	qs = m2/m1
 	Lmax = 5000.
-	common_std = np.abs(Lambda1-(m2/m1)**6*Lambda2)*0.5/1.645
-	common = (0.,common_std)
+	relative_sigmaLs = 0.5/1.645
 	
-	p = unif_m1m2(m1,m2,lambdaa)*peak_Lambda(Lambda1-(m2/m1)**6*Lambda2,common)*(m2/m1)**3*uniform((m2/m1)**3*Lambda2,(0,Lmax))
+	Lwts = np.array([(peak_Lambda(L1*q**-3,(q**3*L2,0.5*(L1*q**-3+q**3*L2)*relative_sigmaLs))*q**3*uniform(q**3*L2,(0.,Lmax)))[0] for L1,L2,q in zip(Lambda1,Lambda2,qs)])
+	
+	p = unif_m1m2(m1,m2,lambdaa)*Lwts
 	
 	return np.where((m1 < m2) | (Lambda2 < Lambda1), z, p)
 
@@ -669,11 +671,13 @@ def peakcut_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa): # uniform
 	else: Lambda2 = np.array(Lambda2)
 	z = np.zeros(len(m1))
 	
+	qs = m2/m1
 	Lmax = 5000.
-	common_std = np.abs(Lambda1-(m2/m1)**6*Lambda2)*0.5/1.645
-	common = (0.,common_std)
+	relative_sigmaLs = 0.5/1.645
 	
-	p = peakcut_m1m2(m1,m2,lambdaa)*peak_Lambda(Lambda1-(m2/m1)**6*Lambda2,common)*(m2/m1)**3*uniform((m2/m1)**3*Lambda2,(0,Lmax))
+	Lwts = np.array([(peak_Lambda(L1*q**-3,(q**3*L2,0.5*(L1*q**-3+q**3*L2)*relative_sigmaLs))*q**3*uniform(q**3*L2,(0.,Lmax)))[0] for L1,L2,q in zip(Lambda1,Lambda2,qs)])
+	
+	p = peakcut_m1m2(m1,m2,lambdaa)*Lwts
 	
 	return np.where((m1 < m2) | (Lambda2 < Lambda1), z, p)
 	
@@ -689,11 +693,13 @@ def bimodcut_m1m2_common_Lambda1Lambda2(m1,m2,Lambda1,Lambda2,lambdaa): # unifor
 	else: Lambda2 = np.array(Lambda2)
 	z = np.zeros(len(m1))
 	
+	qs = m2/m1
 	Lmax = 5000.
-	common_std = np.abs(Lambda1-(m2/m1)**6*Lambda2)*0.5/1.645
-	common = (0.,common_std)
+	relative_sigmaLs = 0.5/1.645
 	
-	p = bimodcut_m1m2(m1,m2,lambdaa)*peak_Lambda(Lambda1-(m2/m1)**6*Lambda2,common)*(m2/m1)**3*uniform((m2/m1)**3*Lambda2,(0,Lmax))
+	Lwts = np.array([(peak_Lambda(L1*q**-3,(q**3*L2,0.5*(L1*q**-3+q**3*L2)*relative_sigmaLs))*q**3*uniform(q**3*L2,(0.,Lmax)))[0] for L1,L2,q in zip(Lambda1,Lambda2,qs)])
+	
+	p = bimodcut_m1m2(m1,m2,lambdaa)*Lwts
 	
 	return np.where((m1 < m2) | (Lambda2 < Lambda1), z, p)
 	
